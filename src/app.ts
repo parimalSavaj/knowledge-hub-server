@@ -1,25 +1,67 @@
-import express from "express";
+import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import healthRoutes from "./routes/health.routes";
-import { errorHandler } from "./shared/middlewares/error-handler.middleware";
+import { HealthRoutes } from "./routes/health.routes";
+import { ErrorHandler } from "./shared/core/error-handler";
+import { ROUTES } from "./shared/constants/route.constants";
+import { HTTP_STATUS } from "./shared/constants/status-code.constants";
 
-const app = express();
+export class App {
+  private app: Application;
+  private healthRoutes!: HealthRoutes;
 
-// Security middleware
-app.use(helmet());
+  private constructor() {
+    this.app = express();
+    
+    this.initializeRouteInstances();
+    this.initializePublicRoutes();
+    this.initializeMiddleware();
+    this.initializeProtectedRoutes();
+    this.initializeErrorHandling();
+  }
 
-// CORS
-app.use(cors());
+  public static create(): App {
+    return new App();
+  }
 
-// Body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  private initializeRouteInstances() {
+    this.healthRoutes = new HealthRoutes();
+  }
 
-// API routes
-app.use("/api/v1/health", healthRoutes);
+  private initializePublicRoutes() {
+    this.app.use(ROUTES.BASE_PATH + ROUTES.HEALTH, this.healthRoutes.getRouter());
+  }
 
-// Error handling
-app.use(errorHandler);
+  private initializeMiddleware() {
+    // Security middleware
+    this.app.use(helmet());
 
-export default app;
+    // CORS
+    this.app.use(cors());
+
+    // Body parsing
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
+  }
+
+  private initializeProtectedRoutes() {
+    // Mount protected routes here
+  }
+
+  private initializeErrorHandling() {
+    // 404 catch-all
+    this.app.use("*", (req: Request, res: Response) => {
+      res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: "Route not found",
+      });
+    });
+
+    // Global error handler
+    this.app.use(ErrorHandler.handleError);
+  }
+
+  public getApp(): Application {
+    return this.app;
+  }
+}
