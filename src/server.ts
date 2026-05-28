@@ -1,13 +1,17 @@
 import { App } from "./app";
 import { config } from "./shared/config";
 import LoggerService from "./shared/services/logger.service";
+import DatabaseService from "./shared/services/database.service";
 
 const logger = LoggerService.getInstance();
+const database = DatabaseService.getInstance();
 
 const bootstrap = async () => {
   try {
     // 1. Load environment config (already loaded via config import)
-    // 2. Create infrastructure services (e.g., db connection) - placeholder for now
+
+    // 2. Connect to database
+    await database.connect();
 
     // 3. Call App.create(...) passing services in
     const appInstance = App.create();
@@ -22,9 +26,11 @@ const bootstrap = async () => {
     });
 
     // 5. Register shutdown handlers
-    const shutdown = () => {
+    const shutdown = async () => {
       logger.info("Received kill signal, shutting down gracefully");
-      server.close(() => {
+
+      server.close(async () => {
+        await database.disconnect();
         logger.info("Closed out remaining connections");
         process.exit(0);
       });
