@@ -31,7 +31,9 @@ async function verifyConnection(pool: Pool): Promise<void> {
     const err = error as NodeJS.ErrnoException & { code?: string };
 
     if (err.code === "ECONNREFUSED") {
-      console.error(`❌ Could not connect to PostgreSQL at ${process.env.DB_HOST}:${process.env.DB_PORT}`);
+      console.error(
+        `❌ Could not connect to PostgreSQL at ${process.env.DB_HOST}:${process.env.DB_PORT}`,
+      );
       console.error("   Make sure PostgreSQL is running and the host/port are correct.");
     } else if (err.code === "3D000") {
       console.error(`❌ Database '${process.env.DB_NAME}' does not exist.`);

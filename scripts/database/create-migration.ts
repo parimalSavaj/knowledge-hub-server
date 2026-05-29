@@ -25,9 +25,6 @@ const timestamp = [
 const fileName = `${timestamp}_${name}.sql`;
 const filePath = path.join(MIGRATIONS_DIR, fileName);
 
-fs.writeFileSync(
-  filePath,
-  `-- Migration: ${name}\n-- Created at: ${now.toISOString()}\n\n`
-);
+fs.writeFileSync(filePath, `-- Migration: ${name}\n-- Created at: ${now.toISOString()}\n\n`);
 
 console.log(`✅ Created migration: migrations/${fileName}`);

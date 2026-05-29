@@ -12,7 +12,7 @@ export class App {
 
   private constructor() {
     this.app = express();
-    
+
     this.initializeRouteInstances();
     this.initializePublicRoutes();
     this.initializeMiddleware();

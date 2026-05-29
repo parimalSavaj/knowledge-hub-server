@@ -20,7 +20,9 @@ export class HealthRoutes {
     // Test route for throwing errors
     this.router.get("/error", (_req: Request, _res: Response, next: NextFunction) => {
       try {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, "This is a test bad request error!", ["INVALID_TEST_INPUT"]);
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, "This is a test bad request error!", [
+          "INVALID_TEST_INPUT",
+        ]);
       } catch (error) {
         next(error);
       }

@@ -1,0 +1,15 @@
+# Build output
+dist/
+
+# Dependencies
+node_modules/
+
+# Migrations (raw SQL — don't reformat)
+migrations/
+
+# Lock files
+package-lock.json
+
+# Environment files
+.env
+.env.*

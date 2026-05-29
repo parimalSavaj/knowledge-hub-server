@@ -3,12 +3,7 @@ import { ApiError } from "./api-error";
 import { HTTP_STATUS } from "../constants/status-code.constants";
 
 export class ErrorHandler {
-  static handleError(
-    error: any,
-    _req: Request,
-    res: Response,
-    _next: NextFunction
-  ) {
+  static handleError(error: any, _req: Request, res: Response, _next: NextFunction) {
     console.error("[GlobalErrorHandler]", error);
 
     let payload: any;
