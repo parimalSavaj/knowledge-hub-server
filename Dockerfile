@@ -7,6 +7,9 @@ COPY package.json package-lock.json ./
 FROM base AS development
 RUN npm ci
 COPY . .
+COPY scripts/docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["npm", "run", "dev"]
 
 # ---- Build ----
