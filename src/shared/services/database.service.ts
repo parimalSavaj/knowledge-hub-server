@@ -1,6 +1,6 @@
 import { Pool, PoolClient, QueryResultRow } from "pg";
 import { config } from "../config";
-import LoggerService from "./logger.service";
+import { LoggerService } from "./logger.service";
 
 export interface IDatabaseService {
   connect(): Promise<void>;
@@ -13,7 +13,7 @@ export interface IDatabaseService {
   getClient(): Promise<PoolClient>;
 }
 
-class DatabaseService implements IDatabaseService {
+export class DatabaseService implements IDatabaseService {
   private static instance: DatabaseService | null = null;
   private pool: Pool | null = null;
   private logger = LoggerService.getInstance();
@@ -109,4 +109,4 @@ class DatabaseService implements IDatabaseService {
   }
 }
 
-export default DatabaseService;
+

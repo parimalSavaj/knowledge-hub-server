@@ -9,7 +9,7 @@ export interface ILoggerService {
   fatal(message: string, error?: Error | unknown, data?: object): void;
 }
 
-class LoggerService implements ILoggerService {
+export class LoggerService implements ILoggerService {
   private static instance: LoggerService | null = null;
   private logger: pino.Logger;
 
@@ -66,5 +66,3 @@ class LoggerService implements ILoggerService {
     }
   }
 }
-
-export default LoggerService;
