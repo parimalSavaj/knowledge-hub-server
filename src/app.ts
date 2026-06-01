@@ -4,11 +4,11 @@ import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
 import { HealthRoutes } from "./routes/health.routes";
 import { ErrorHandler } from "./shared/core/error-handler";
-import { ROUTES } from "./shared/constants/route.constants";
+import { ROUTE_PREFIXES } from "./shared/constants/route.constants";
 import { HTTP_STATUS } from "./shared/constants/status-code.constants";
 import { ILoggerService } from "./shared/services/logger.service";
 import { IDatabaseService } from "./shared/services/database.service";
-import { ISwaggerService } from "./shared/services/swagger.service";
+import { ISwaggerService } from "./shared/services/swagger/swagger.service";
 
 export class App {
   private app: Application;
@@ -49,14 +49,14 @@ export class App {
   private initializePublicRoutes() {
     // API docs — served before helmet so CSP doesn't block Swagger UI assets
     this.app.use(
-      ROUTES.BASE_PATH + ROUTES.DOCS,
+      ROUTE_PREFIXES.BASE_PATH + ROUTE_PREFIXES.DOCS,
       swaggerUi.serve,
       swaggerUi.setup(this.swaggerService.getSpec(), {
         customSiteTitle: "Knowledge Hub API Docs",
       }),
     );
 
-    this.app.use(ROUTES.BASE_PATH + ROUTES.HEALTH, this.healthRoutes.getRouter());
+    this.app.use(ROUTE_PREFIXES.BASE_PATH + ROUTE_PREFIXES.HEALTH, this.healthRoutes.getRouter());
   }
 
   private initializeMiddleware() {

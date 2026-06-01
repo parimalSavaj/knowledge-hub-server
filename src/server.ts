@@ -2,7 +2,7 @@ import { App } from "./app";
 import { config } from "./shared/config";
 import { LoggerService } from "./shared/services/logger.service";
 import { DatabaseService } from "./shared/services/database.service";
-import { SwaggerService } from "./shared/services/swagger.service";
+import { SwaggerService } from "./shared/services/swagger/swagger.service";
 
 const logger = LoggerService.getInstance();
 const database = DatabaseService.getInstance();
