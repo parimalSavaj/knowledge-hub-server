@@ -25,6 +25,20 @@ const timestamp = [
 const fileName = `${timestamp}_${name}.sql`;
 const filePath = path.join(MIGRATIONS_DIR, fileName);
 
-fs.writeFileSync(filePath, `-- Migration: ${name}\n-- Created at: ${now.toISOString()}\n\n`);
+fs.writeFileSync(
+  filePath,
+  `-- Migration: ${name}
+-- Created at: ${now.toISOString()}
+--
+-- Guidelines:
+--   - Wrap destructive or multi-step changes in BEGIN/COMMIT
+--   - Use IF NOT EXISTS / IF EXISTS for idempotency
+--   - Use TIMESTAMPTZ (not TIMESTAMP) for all timestamp columns
+--   - Add indexes for every FK column and any column used in WHERE/ORDER BY
+--   - Add CHECK constraints for columns with a fixed set of valid values
+--   - One concern per migration file — don't combine unrelated changes
+
+`,
+);
 
 console.log(`✅ Created migration: migrations/${fileName}`);

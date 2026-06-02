@@ -25,6 +25,13 @@ export const swaggerOptions: OAS3Options = {
     paths: swaggerPaths,
     components: {
       schemas: swaggerSchemas,
+      securitySchemes: {
+        bearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+      },
     },
   },
   apis: [],

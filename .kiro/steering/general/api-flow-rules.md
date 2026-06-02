@@ -128,33 +128,37 @@ export class CreateUserUseCase {
 }
 ```
 
-### 7. Repository Interface — `domain/interfaces/<name>.repository.interface.ts`
+### 7. Repository Interface — `infrastructure/repositories/interfaces/<name>.repository.interface.ts`
 - Defines the contract the use case depends on.
 - Use cases import this interface — never the concrete repository.
-- One interface per entity.
+- One interface per entity. No `PoolClient` parameters — repositories are clean.
 
 ```ts
 export interface IUsersRepository {
   findAll(): Promise<UserEntity[]>;
   findById(id: number): Promise<UserEntity | null>;
-  create(dto: CreateUserRequestDto): Promise<UserEntity>;
+  create(data: { name: string; email: string; password: string }): Promise<UserEntity>;
 }
 ```
 
 ### 8. Repository — `infrastructure/repositories/<name>.repository.ts`
-- Implements the repository interface from `domain/interfaces/`.
-- Contains raw SQL queries only — no business logic.
-- Uses `IDatabaseService` methods (select, selectOne, insert, update, delete).
+- Imports its interface from `./interfaces/` and its row type from `./types/`.
+- Has a `private readonly TABLE = '<table_name>'` constant used in all SQL strings.
+- Has `constructor(private readonly db: IDatabaseService)` — neutral name, typed by interface.
+- Contains raw SQL queries only — no business logic. Never accepts a `PoolClient`.
 
 ```ts
 export class UsersRepository implements IUsersRepository {
-  constructor(private db: IDatabaseService) {}
+  private readonly TABLE = 'users';
+
+  constructor(private readonly db: IDatabaseService) {}
 
   async findById(id: number): Promise<UserEntity | null> {
-    return this.db.selectOne<UserEntity>(
-      'SELECT id, name, email, created_at FROM users WHERE id = $1',
-      [id]
+    const row = await this.db.selectOne<UserRow>(
+      `SELECT * FROM ${this.TABLE} WHERE id = $1 AND deleted_at IS NULL`,
+      [id],
     );
+    return row ? UserEntity.fromRecord(row) : null;
   }
 }
 ```
@@ -166,9 +170,9 @@ export class UsersRepository implements IUsersRepository {
 When adding a new endpoint to an existing or new module, follow this order:
 
 1. **Entity** — add or update `domain/entities/<name>.entity.ts` if the DB shape is new.
-2. **Types** — add any new enums or plain types to `domain/types/<name>.types.ts`.
-3. **Repository interface** — add the new method signature to `domain/interfaces/<name>.repository.interface.ts`.
-4. **Repository implementation** — implement the new method with raw SQL in `infrastructure/repositories/<name>.repository.ts`.
+2. **Types** — add any new domain-level types to `domain/types/<name>.types.ts`. Add the raw DB row type to `domain/types/infrastructure/repositories/<name>.types.ts`.
+3. **Repository interface** — add the new method signature to `infrastructure/repositories/interfaces/<name>.repository.interface.ts`.
+4. **Repository implementation** — implement the new method with raw SQL in `infrastructure/repositories/<name>.repository.ts`. Add row type to `infrastructure/repositories/types/<name>.types.ts` if new columns are needed.
 5. **DTO** — create `application/dtos/<action>-<entity>.dto.ts` with request and response interfaces.
 6. **Use case** — create `application/<action>-<entity>.use-case.ts` with the `execute()` method.
 7. **Controller** — add the new handler method to `presentation/<name>.controller.ts`.

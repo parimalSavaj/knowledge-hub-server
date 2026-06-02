@@ -28,8 +28,8 @@ export class App {
     this.swaggerService = swaggerService;
 
     this.initializeRouteInstances();
-    this.initializePublicRoutes();
     this.initializeMiddleware();
+    this.initializePublicRoutes();
     this.initializeProtectedRoutes();
     this.initializeErrorHandling();
   }
@@ -72,7 +72,7 @@ export class App {
   }
 
   private initializeProtectedRoutes() {
-    // Mount protected routes here
+    // Feature module routes that require authentication go here
   }
 
   private initializeErrorHandling() {

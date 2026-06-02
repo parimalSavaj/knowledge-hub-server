@@ -10,45 +10,63 @@ src/
 │   ├── middlewares/               # Global middlewares (auth, rate-limit, etc.)
 │   └── core/                      # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 │
-├── domain/                        # All domain-level contracts and shapes
-│   ├── types/                     # Plain types, enums, primitives — one file per domain
-│   │   ├── user.types.ts
-│   │   ├── organization.types.ts
-│   │   └── document.types.ts
-│   ├── interfaces/                # All interface contracts — repo, services, external
-│   │   ├── users.repository.interface.ts
-│   │   └── document.repository.interface.ts
-│   └── entities/                  # Entity class/object shapes (DB row representations)
-│       ├── user.entity.ts
-│       └── document.entity.ts
+├── domain/                        # Pure domain layer — entities, enums, value objects, errors
+│   ├── entities/                  # Entity classes — DB row representations with getters
+│   │   ├── user.entity.ts
+│   │   └── organization.entity.ts
+│   ├── enums/                     # Shared enums
+│   │   └── org-role.enum.ts
+│   ├── value-objects/             # Value objects with validation logic
+│   │   ├── email.value-object.ts
+│   │   └── org-slug.value-object.ts
+│   ├── types/                     # Domain-level plain types only (no row shapes, no interfaces)
+│   │   └── auth.types.ts
+│   └── errors/                    # Domain-level errors (no HTTP codes)
+│       └── domain-errors.ts
 │
 ├── infrastructure/                # Data access layer
-│   └── repositories/              # Raw SQL implementations
-│       ├── users.repository.ts
-│       └── document.repository.ts
+│   └── repositories/              # Everything for a repository lives together in one folder
+│       ├── interfaces/            # Repository contract interfaces — one file per entity
+│       │   ├── users.repository.interface.ts
+│       │   ├── organizations.repository.interface.ts
+│       │   ├── org-members.repository.interface.ts
+│       │   └── refresh-tokens.repository.interface.ts
+│       ├── types/                 # Raw DB row types — one file per entity
+│       │   ├── users.types.ts
+│       │   ├── organizations.types.ts
+│       │   ├── org-members.types.ts
+│       │   └── refresh-tokens.types.ts
+│       ├── users.repository.ts               # Implementation
+│       ├── organizations.repository.ts
+│       ├── org-members.repository.ts
+│       └── refresh-tokens.repository.ts
 │
 ├── modules/                       # All modules — system and feature
 │   ├── system/                    # System-level routes (no business logic, no DB)
 │   │   └── health.routes.ts       # Flat — no subfolders
 │   │
 │   ├── users/                     # Feature module example
-│   │   ├── users.factory.ts       # Module root — wires repo + use cases → creates controller
-│   │   ├── application/           # Business logic only
-│   │   │   ├── dtos/              # One file per use case, both DTOs inside
-│   │   │   │   ├── create-user.dto.ts   # exports CreateUserRequestDto + CreateUserResponseDto
-│   │   │   │   └── get-user.dto.ts      # exports GetUserRequestDto + GetUserResponseDto
+│   │   ├── users.factory.ts
+│   │   ├── interfaces/            # Module-specific interfaces (if needed)
+│   │   ├── types/                 # Module-specific types (if needed)
+│   │   ├── application/
+│   │   │   ├── dtos/
+│   │   │   │   ├── create-user.dto.ts
+│   │   │   │   └── get-user.dto.ts
 │   │   │   ├── create-user.use-case.ts
 │   │   │   └── get-user.use-case.ts
-│   │   └── presentation/          # HTTP layer
+│   │   └── presentation/
 │   │       ├── users.routes.ts
 │   │       ├── users.controller.ts
 │   │       └── users.validation.ts
 │   │
-│   └── auth/                      # Another feature module example
+│   └── auth/
 │       ├── auth.factory.ts
+│       ├── interfaces/            # Module-specific interfaces (if needed)
+│       ├── types/                 # Module-specific types (if needed)
 │       ├── application/
 │       │   ├── dtos/
-│       │   │   └── login.dto.ts   # exports LoginRequestDto + LoginResponseDto
+│       │   │   └── login.dto.ts
 │       │   └── login.use-case.ts
 │       └── presentation/
 │           ├── auth.routes.ts
@@ -68,31 +86,36 @@ src/
 - Import from shared using relative paths like `../shared/services/logger.service`.
 
 ### `domain/`
-- Contains all domain-level contracts and shapes. Three subfolders only:
-  - `types/` — plain TypeScript types, enums, primitives. One file per domain (e.g., `user.types.ts`). No classes, no methods.
-  - `interfaces/` — all interface contracts including repository interfaces, external service interfaces. One file per domain (e.g., `users.repository.interface.ts`).
-  - `entities/` — entity shapes that represent DB row structures. One file per domain (e.g., `user.entity.ts`). No business logic.
-- Nothing in `domain/` imports from `infrastructure/`, `modules/`, or `shared/services/`.
-- `domain/` is the lowest layer — it has no dependencies on other src folders.
+- The lowest layer — nothing in `domain/` imports from `infrastructure/`, `modules/`, or `shared/services/`.
+- `entities/` — entity classes with a private constructor, a static `fromRecord()` factory, and readonly getters. No business logic.
+- `enums/` — shared TypeScript enums used across domain and infrastructure.
+- `value-objects/` — classes that wrap and validate a single primitive value.
+- `types/` — domain-level plain `type` aliases only (e.g. `auth.types.ts`). No row shapes, no interfaces.
+- `errors/` — domain-level error classes with no HTTP status codes.
 
 ### `infrastructure/`
-- Contains all database interaction code.
-- `repositories/` — raw SQL implementations. One file per entity.
-- Implementations import their interface contract from `domain/interfaces/`.
-- No business logic here — only data access (SELECT, INSERT, UPDATE, DELETE).
+- Contains all database interaction code — raw SQL only, no business logic.
+- `repositories/` has three parts:
+  - `interfaces/` — one `<entity>.repository.interface.ts` per entity. Imports only from `domain/`.
+  - `types/` — one `<entity>.types.ts` per entity. Raw DB row `type` aliases. Imports only from `domain/`.
+  - `*.repository.ts` (flat) — implementations. Each:
+    - Imports its interface from `./interfaces/` and its row type from `./types/`.
+    - Has `private readonly TABLE = '<table_name>'` used in all SQL strings.
+    - Has `constructor(private readonly db: IDatabaseService)`.
+    - Never accepts a `PoolClient` parameter — transaction control belongs in use cases.
 
 ### `modules/`
 - Every route in the app lives inside `modules/` — no exceptions.
 - `modules/system/` — system-level routes only (health, ping, status). Flat, no subfolders.
-- Feature modules (e.g., `users`, `auth`, `documents`) have exactly this structure:
-  - `<name>.factory.ts` — at module root. Wires repo + use cases → creates and returns controller. Only consumer is the routes file.
-  - `application/` — use cases and DTOs only. No controller, no repo imports.
-  - `application/dtos/` — one file per use case. Each file exports both the request and response DTO for that use case (e.g., `create-user.dto.ts` exports `CreateUserRequestDto` and `CreateUserResponseDto`).
-  - `presentation/` — routes, controller, validation. One file each per module.
-- Factory sits at module root because it imports across all layers (repo, use cases, controller) — it is the composition root for the module.
+- Feature modules have exactly this structure:
+  - `<name>.factory.ts` — at module root. Wires repo + use cases → creates and returns controller.
+  - `interfaces/` — module-specific interfaces, only created when the module needs them.
+  - `types/` — module-specific types, only created when the module needs them.
+  - `application/` — use cases and DTOs only.
+  - `application/dtos/` — one file per use case, exports both request and response DTO.
+  - `presentation/` — routes, controller, validation. One file each.
 - `application/` must stay pure — only use cases and DTOs, never imports controller or repository directly.
 - Modules never import from another module's folder directly.
-- If a module needs data from another domain, it imports from `domain/interfaces/` — never from another module's folder.
 
 ### Import direction (strict)
 ```
@@ -106,16 +129,20 @@ presentation/routes
   → presentation/validation
 
 application/use-cases
-  → domain/interfaces   (never infrastructure/repositories directly)
+  → infrastructure/repositories/interfaces/<entity>.repository.interface   (never the concrete class)
+  → infrastructure/repositories/types/<entity>.types                       (row types, only when needed for transactions)
   → domain/types
   → domain/entities
+  → domain/enums
 
-infrastructure/repositories
-  → domain/interfaces   (implements the contract)
+infrastructure/repositories/<entity>.repository.ts
+  → ./interfaces/<entity>.repository.interface   (same folder)
+  → ./types/<entity>.types                       (same folder)
   → domain/entities
+  → domain/enums
 ```
-- `application/` never imports from `presentation/` or `infrastructure/repositories/`.
+- `application/` never imports from `presentation/` or the concrete `*.repository.ts` files.
 - `factory` is the only file allowed to import across all layers within a module.
 - `domain/` has zero imports from any other src folder — it is the base layer.
 - Never import upward or sideways between modules.
-- `domain/` and `infrastructure/` are the only shared data-layer imports across modules.
+- Modules needing shared data import from `domain/` or `infrastructure/repositories/` interfaces — never from another module's folder.
