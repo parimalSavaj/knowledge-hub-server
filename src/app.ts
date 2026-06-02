@@ -2,7 +2,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import swaggerUi from "swagger-ui-express";
-import { HealthRoutes } from "./routes/health.routes";
+import { HealthRoutes } from "./modules/system/health.routes";
 import { ErrorHandler } from "./shared/core/error-handler";
 import { ROUTE_PREFIXES } from "./shared/constants/route.constants";
 import { HTTP_STATUS } from "./shared/constants/status-code.constants";
