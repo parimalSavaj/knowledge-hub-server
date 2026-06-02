@@ -5,8 +5,21 @@
 ```
 src/
 ├── shared/                        # Cross-cutting concerns used across the entire app
+│   ├── @types/                    # Type augmentations for third-party libraries (.d.ts files)
 │   ├── config/                    # App configuration (env vars, constants)
-│   ├── services/                  # Shared services (logger, database, swagger)
+│   ├── constants/                 # Shared constants (route prefixes, status codes)
+│   ├── services/                  # Shared services (logger, database, swagger, jwt)
+│   │   ├── interfaces/            # Service contract interfaces — one file per service
+│   │   │   ├── logger.service.interface.ts
+│   │   │   ├── database.service.interface.ts
+│   │   │   └── jwt.service.interface.ts
+│   │   ├── types/                 # Service-related types — one file per service/concern
+│   │   │   ├── database.types.ts
+│   │   │   └── jwt.types.ts
+│   │   ├── logger.service.ts
+│   │   ├── database.service.ts
+│   │   ├── jwt.service.ts
+│   │   └── swagger/
 │   ├── middlewares/               # Global middlewares (auth, rate-limit, etc.)
 │   └── core/                      # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 │
@@ -19,8 +32,6 @@ src/
 │   ├── value-objects/             # Value objects with validation logic
 │   │   ├── email.value-object.ts
 │   │   └── org-slug.value-object.ts
-│   ├── types/                     # Domain-level plain types only (no row shapes, no interfaces)
-│   │   └── auth.types.ts
 │   └── errors/                    # Domain-level errors (no HTTP codes)
 │       └── domain-errors.ts
 │
@@ -79,19 +90,13 @@ src/
 
 ## Rules
 
-### `shared/`
-- Contains only cross-cutting concerns used across multiple parts of the app.
-- Never put feature-specific or business logic inside `shared/`.
-- No routes inside `shared/` — all routes live inside `modules/`.
-- Import from shared using relative paths like `../shared/services/logger.service`.
-
 ### `domain/`
 - The lowest layer — nothing in `domain/` imports from `infrastructure/`, `modules/`, or `shared/services/`.
 - `entities/` — entity classes with a private constructor, a static `fromRecord()` factory, and readonly getters. No business logic.
 - `enums/` — shared TypeScript enums used across domain and infrastructure.
 - `value-objects/` — classes that wrap and validate a single primitive value.
-- `types/` — domain-level plain `type` aliases only (e.g. `auth.types.ts`). No row shapes, no interfaces.
 - `errors/` — domain-level error classes with no HTTP status codes.
+- No `types/` folder in domain — types live at the layer that owns them (`shared/services/types/`, `infrastructure/repositories/types/`, or module-level `types/`).
 
 ### `infrastructure/`
 - Contains all database interaction code — raw SQL only, no business logic.
@@ -131,7 +136,7 @@ presentation/routes
 application/use-cases
   → infrastructure/repositories/interfaces/<entity>.repository.interface   (never the concrete class)
   → infrastructure/repositories/types/<entity>.types                       (row types, only when needed for transactions)
-  → domain/types
+  → shared/services/types/                                                 (service-related types like jwt.types.ts)
   → domain/entities
   → domain/enums
 

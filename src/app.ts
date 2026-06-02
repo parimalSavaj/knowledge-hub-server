@@ -6,9 +6,10 @@ import { HealthRoutes } from "./modules/system/health.routes";
 import { ErrorHandler } from "./shared/core/error-handler";
 import { ROUTE_PREFIXES } from "./shared/constants/route.constants";
 import { HTTP_STATUS } from "./shared/constants/status-code.constants";
-import { ILoggerService } from "./shared/services/logger.service";
-import { IDatabaseService } from "./shared/services/database.service";
-import { ISwaggerService } from "./shared/services/swagger/swagger.service";
+import { ILoggerService } from "./shared/services/interfaces/logger.service.interface";
+import { IDatabaseService } from "./shared/services/interfaces/database.service.interface";
+import { ISwaggerService } from "./shared/services/interfaces/swagger.service.interface";
+import { IJwtService } from "./shared/services/interfaces/jwt.service.interface";
 
 export class App {
   private app: Application;
@@ -16,16 +17,19 @@ export class App {
   private logger: ILoggerService;
   private database: IDatabaseService;
   private swaggerService: ISwaggerService;
+  private jwtService: IJwtService;
 
   private constructor(
     logger: ILoggerService,
     database: IDatabaseService,
     swaggerService: ISwaggerService,
+    jwtService: IJwtService,
   ) {
     this.app = express();
     this.logger = logger;
     this.database = database;
     this.swaggerService = swaggerService;
+    this.jwtService = jwtService;
 
     this.initializeRouteInstances();
     this.initializeMiddleware();
@@ -38,8 +42,9 @@ export class App {
     logger: ILoggerService,
     database: IDatabaseService,
     swaggerService: ISwaggerService,
+    jwtService: IJwtService,
   ): App {
-    return new App(logger, database, swaggerService);
+    return new App(logger, database, swaggerService, jwtService);
   }
 
   private initializeRouteInstances() {

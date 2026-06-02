@@ -3,7 +3,7 @@ import { ApiResponse } from "../../shared/core/api-response";
 import { ApiError } from "../../shared/core/api-error";
 import { HTTP_STATUS } from "../../shared/constants/status-code.constants";
 import { ROUTES } from "../../shared/constants/route.constants";
-import { ILoggerService } from "../../shared/services/logger.service";
+import { ILoggerService } from "../../shared/services/interfaces/logger.service.interface";
 
 export class HealthRoutes {
   private router: Router;

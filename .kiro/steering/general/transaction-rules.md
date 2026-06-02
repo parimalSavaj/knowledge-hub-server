@@ -102,4 +102,4 @@ const user = result.rows[0];
 - Always rollback in the `catch` block before re-throwing the error.
 - Never begin a transaction inside a repository method.
 - `IDatabaseService` is injected into the use case via the factory when transactions are needed.
-- Use row types from `domain/types/infrastructure/repositories/` as the generic in `client.query<RowType>()`.
+- Use row types from `infrastructure/repositories/types/` as the generic in `client.query<RowType>()`.

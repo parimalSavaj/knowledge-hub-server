@@ -12,31 +12,25 @@ A user can belong to multiple organizations with a different role in each.
 The JWT carries the user identity plus their current active organization context.
 
 ```ts
-// src/domain/types/auth.types.ts
+// src/shared/services/types/jwt.types.ts
+import { OrgRole } from '../../../domain/enums/org-role.enum';
 
-export enum OrgRole {
-  OWNER  = 'owner',   // full control of the organization
-  ADMIN  = 'admin',   // manage members and content
-  MEMBER = 'member',  // read and contribute
-  VIEWER = 'viewer',  // read only
-}
-
-export interface JwtPayload {
-  sub: number;           // user id
+export type JwtPayload = {
+  userId: number;        // user id
   email: string;         // user email
   orgId: number;         // currently active organization id
   orgRole: OrgRole;      // user's role in the active organization
   iat?: number;          // issued at (set by jwt.sign)
   exp?: number;          // expiry (set by jwt.sign)
-}
+};
 
 // Attached to req.user after token verification
-export interface AuthenticatedUser {
-  id: number;
+export type AuthenticatedUser = {
+  userId: number;
   email: string;
   orgId: number;
   orgRole: OrgRole;
-}
+};
 ```
 
 ### Why orgId + orgRole in the token
@@ -59,8 +53,8 @@ export interface AuthenticatedUser {
 Extend Express `Request` type globally so `req.user` is typed everywhere:
 
 ```ts
-// src/shared/types/express.d.ts
-import { AuthenticatedUser } from '../../domain/types/auth.types';
+// src/shared/@types/express.d.ts
+import { AuthenticatedUser } from '../services/types/jwt.types';
 
 declare global {
   namespace Express {
@@ -127,7 +121,7 @@ Two tokens are issued together on login and org switch:
 | | Access Token | Refresh Token |
 |---|---|---|
 | Purpose | Authenticate API requests | Obtain a new access token |
-| Payload | `sub`, `email`, `orgId`, `orgRole` | `sub` only |
+| Payload | `userId`, `email`, `orgId`, `orgRole` | `userId` only |
 | Expiry | Short — `15m` to `1h` | Long — `7d` to `30d` |
 | Storage | Memory / Authorization header | HttpOnly cookie (never localStorage) |
 | Secret | `config.jwt.accessSecret` | `config.jwt.refreshSecret` |
@@ -149,7 +143,7 @@ jwt: {
 
 ```ts
 export interface RefreshTokenPayload {
-  sub: number;   // user id only — no org context, no role
+  userId: number;   // user id only — no org context, no role
 }
 ```
 
@@ -193,8 +187,8 @@ POST /auth/logout
 ## Token Issuance
 
 - Access token + refresh token are issued together on login and org switch.
-- Access token payload: `sub`, `email`, `orgId`, `orgRole`.
-- Refresh token payload: `sub` only.
+- Access token payload: `userId`, `email`, `orgId`, `orgRole`.
+- Refresh token payload: `userId` only.
 - Access token returned in response body — client stores in memory.
 - Refresh token set as HttpOnly cookie — never accessible via JavaScript.
 - Use separate secrets for access and refresh tokens (`JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`).
@@ -204,8 +198,8 @@ POST /auth/logout
 
 - Never read or verify JWT outside `auth.middleware.ts`.
 - Never access `req.user` without first applying `authenticate` middleware on that route.
-- Never store sensitive data in access token payload — only `sub`, `email`, `orgId`, `orgRole`.
-- Refresh token payload contains `sub` only — no org context, no role.
+- Never store sensitive data in access token payload — only `userId`, `email`, `orgId`, `orgRole`.
+- Refresh token payload contains `userId` only — no org context, no role.
 - Access token travels in the `Authorization` header. Refresh token travels in an HttpOnly cookie only.
 - Never store refresh tokens in localStorage or return them in the response body.
 - Refresh tokens must be stored in DB — a token not in the DB is always rejected.

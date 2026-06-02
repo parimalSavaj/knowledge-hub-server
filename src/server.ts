@@ -3,16 +3,18 @@ import { config } from "./shared/config";
 import { LoggerService } from "./shared/services/logger.service";
 import { DatabaseService } from "./shared/services/database.service";
 import { SwaggerService } from "./shared/services/swagger/swagger.service";
+import { JwtService } from "./shared/services/jwt.service";
 
 const logger = LoggerService.getInstance();
 const database = DatabaseService.getInstance();
 const swagger = SwaggerService.getInstance();
+const jwtService = JwtService.getInstance();
 
 const bootstrap = async () => {
   try {
     await database.connect();
 
-    const appInstance = App.create(logger, database, swagger);
+    const appInstance = App.create(logger, database, swagger, jwtService);
     const app = appInstance.getApp();
 
     const server = app.listen(config.port, () => {

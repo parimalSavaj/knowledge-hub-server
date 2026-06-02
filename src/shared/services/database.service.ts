@@ -1,17 +1,7 @@
 import { Pool, PoolClient, QueryResultRow } from "pg";
 import { config } from "../config";
 import { LoggerService } from "./logger.service";
-
-export interface IDatabaseService {
-  connect(): Promise<void>;
-  disconnect(): Promise<void>;
-  select<T extends QueryResultRow>(text: string, params?: unknown[]): Promise<T[]>;
-  selectOne<T extends QueryResultRow>(text: string, params?: unknown[]): Promise<T | null>;
-  insert<T extends QueryResultRow>(text: string, params?: unknown[]): Promise<T>;
-  update(text: string, params?: unknown[]): Promise<number>;
-  delete(text: string, params?: unknown[]): Promise<number>;
-  getClient(): Promise<PoolClient>;
-}
+import { IDatabaseService } from "./interfaces/database.service.interface";
 
 export class DatabaseService implements IDatabaseService {
   private static instance: DatabaseService | null = null;
@@ -94,12 +84,6 @@ export class DatabaseService implements IDatabaseService {
     this.ensureConnected();
     const result = await this.pool!.query(text, params);
     return result.rowCount ?? 0;
-  }
-
-  // For transactions — gives raw client
-  async getClient(): Promise<PoolClient> {
-    this.ensureConnected();
-    return this.pool!.connect();
   }
 
   private ensureConnected(): void {

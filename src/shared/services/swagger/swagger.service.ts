@@ -1,9 +1,6 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import { swaggerOptions } from "./swagger.config";
-
-export interface ISwaggerService {
-  getSpec(): object;
-}
+import { ISwaggerService } from "../interfaces/swagger.service.interface";
 
 export class SwaggerService implements ISwaggerService {
   private static instance: SwaggerService | null = null;

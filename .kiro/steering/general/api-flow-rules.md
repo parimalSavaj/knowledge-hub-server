@@ -170,9 +170,9 @@ export class UsersRepository implements IUsersRepository {
 When adding a new endpoint to an existing or new module, follow this order:
 
 1. **Entity** — add or update `domain/entities/<name>.entity.ts` if the DB shape is new.
-2. **Types** — add any new domain-level types to `domain/types/<name>.types.ts`. Add the raw DB row type to `domain/types/infrastructure/repositories/<name>.types.ts`.
+2. **Repository types** — add the raw DB row type to `infrastructure/repositories/types/<name>.types.ts`.
 3. **Repository interface** — add the new method signature to `infrastructure/repositories/interfaces/<name>.repository.interface.ts`.
-4. **Repository implementation** — implement the new method with raw SQL in `infrastructure/repositories/<name>.repository.ts`. Add row type to `infrastructure/repositories/types/<name>.types.ts` if new columns are needed.
+4. **Repository implementation** — implement the new method with raw SQL in `infrastructure/repositories/<name>.repository.ts`.
 5. **DTO** — create `application/dtos/<action>-<entity>.dto.ts` with request and response interfaces.
 6. **Use case** — create `application/<action>-<entity>.use-case.ts` with the `execute()` method.
 7. **Controller** — add the new handler method to `presentation/<name>.controller.ts`.
