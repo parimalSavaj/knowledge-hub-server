@@ -24,14 +24,15 @@ src/
 │   └── core/                      # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 │
 ├── domain/                        # Pure domain layer — entities, enums, value objects, errors
-│   ├── entities/                  # Entity classes — DB row representations with getters
+│   ├── entities/                  # Entity classes — aggregate roots with business logic
 │   │   ├── user.entity.ts
 │   │   └── organization.entity.ts
 │   ├── enums/                     # Shared enums
-│   │   └── org-role.enum.ts
-│   ├── value-objects/             # Value objects with validation logic
-│   │   ├── email.value-object.ts
-│   │   └── org-slug.value-object.ts
+│   │   ├── org-role.enum.ts
+│   │   └── auth-provider.enum.ts
+│   ├── value-objects/             # Immutable objects describing entity attributes
+│   │   ├── user-membership.value-object.ts
+│   │   └── org-member.value-object.ts
 │   └── errors/                    # Domain-level errors (no HTTP codes)
 │       └── domain-errors.ts
 │
@@ -92,11 +93,7 @@ src/
 
 ### `domain/`
 - The lowest layer — nothing in `domain/` imports from `infrastructure/`, `modules/`, or `shared/services/`.
-- `entities/` — entity classes with a private constructor, a static `fromRecord()` factory, and readonly getters. No business logic.
-- `enums/` — shared TypeScript enums used across domain and infrastructure.
-- `value-objects/` — classes that wrap and validate a single primitive value.
-- `errors/` — domain-level error classes with no HTTP status codes.
-- No `types/` folder in domain — types live at the layer that owns them (`shared/services/types/`, `infrastructure/repositories/types/`, or module-level `types/`).
+- For detailed rules, see `.kiro/steering/domain/` — entities, value objects, and enums each have their own rules file.
 
 ### `infrastructure/`
 - Contains all database interaction code — raw SQL only, no business logic.
