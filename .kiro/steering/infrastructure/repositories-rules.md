@@ -86,11 +86,12 @@ Rules:
 
 ## Implementation — `<name>.repository.ts`
 
-The concrete class with raw SQL queries.
+The concrete class with raw SQL queries. The repository is responsible for mapping DB rows (snake_case) to entity props (camelCase) via `Entity.create(props)`.
 
 ```ts
 import { IDatabaseService } from '../../../shared/services/interfaces/database.service.interface';
 import { UserEntity } from '../../../domain/entities/user.entity';
+import { AuthProvider } from '../../../domain/enums/auth-provider.enum';
 import { IUsersRepository } from './users.repository.interface';
 import { UserRow } from './users.types';
 
@@ -104,7 +105,7 @@ export class UsersRepository implements IUsersRepository {
       `SELECT * FROM ${this.TABLE} WHERE id = $1 AND deleted_at IS NULL`,
       [id],
     );
-    return row ? UserEntity.fromRecord(row) : null;
+    return row ? this.toEntity(row) : null;
   }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
@@ -112,7 +113,7 @@ export class UsersRepository implements IUsersRepository {
       `SELECT * FROM ${this.TABLE} WHERE email = $1 AND deleted_at IS NULL`,
       [email],
     );
-    return row ? UserEntity.fromRecord(row) : null;
+    return row ? this.toEntity(row) : null;
   }
 
   async create(data: { name: string; email: string; password: string }): Promise<UserEntity> {
@@ -120,7 +121,23 @@ export class UsersRepository implements IUsersRepository {
       `INSERT INTO ${this.TABLE} (name, email, password) VALUES ($1, $2, $3) RETURNING *`,
       [data.name, data.email, data.password],
     );
-    return UserEntity.fromRecord(row);
+    return this.toEntity(row);
+  }
+
+  // --- Private mapper: DB row (snake_case) → Entity props (camelCase) ---
+  private toEntity(row: UserRow): UserEntity {
+    return UserEntity.create({
+      id: row.id,
+      name: row.name,
+      email: row.email,
+      password: row.password,
+      avatarUrl: row.avatar_url,
+      authProvider: row.auth_provider as AuthProvider,
+      providerId: row.provider_id,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      deletedAt: row.deleted_at,
+    });
   }
 }
 ```
@@ -131,7 +148,8 @@ Rules:
 - Has `private readonly TABLE = '<table_name>'` — used in all SQL strings.
 - Has `constructor(private readonly db: IDatabaseService)` — receives the database service.
 - All queries filter `WHERE deleted_at IS NULL` for soft-deleted tables — this is the repository's responsibility, never the use case's.
-- Returns domain entities via `Entity.fromRecord(row)` — never returns raw rows to the use case. (Exception: tables with no entity return row types directly.)
+- Returns domain entities via a private `toEntity(row)` method that maps row (snake_case) to `Entity.create(props)` (camelCase) — never returns raw rows to the use case. (Exception: tables with no entity return row types directly.)
+- Every repository with a domain entity must have a `private toEntity(row: <Row>): <Entity>` method — this is the single place for row-to-entity mapping.
 - Uses parameterized queries (`$1`, `$2`, ...) — never string interpolation for values.
 - No business logic — only data access and entity mapping.
 - Never accepts a `PoolClient` parameter — transaction control belongs in use cases per transaction rules.
@@ -142,8 +160,8 @@ Rules:
 <name>.repository.ts imports:
   → ./name.repository.interface     (co-located interface)
   → ./name.types                    (co-located row type)
-  → domain/entities/                (for entity mapping)
-  → domain/enums/                   (if needed for queries)
+  → domain/entities/                (for Entity.create() call)
+  → domain/enums/                   (for enum casting in toEntity mapping)
   → shared/services/interfaces/     (for IDatabaseService)
 
 <name>.repository.interface.ts imports:

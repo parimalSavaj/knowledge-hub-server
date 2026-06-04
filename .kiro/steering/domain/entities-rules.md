@@ -1,5 +1,5 @@
 ---
-description: Rules for domain entities (private constructor, fromRecord factory, getters, business methods)
+description: Rules for domain entities (private constructor, create factory, getters, business methods)
 inclusion: fileMatch
 fileMatchPattern: "src/domain/entities/**"
 ---
@@ -32,7 +32,7 @@ If the answer to the Lifecycle Test is "Yes" → it's likely a Value Object or C
 Every entity follows this exact pattern:
 
 ```ts
-import { SomeRow } from '../../infrastructure/repositories/types/some.types';
+// NO imports from infrastructure — domain is the innermost layer
 
 export class SomeEntity {
   private constructor(
@@ -46,15 +46,23 @@ export class SomeEntity {
   ) {}
 
   // --- Factory ---
-  static fromRecord(row: SomeRow): SomeEntity {
+  static create(props: {
+    id: number;
+    name: string;
+    email: string;
+    status: string;
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }): SomeEntity {
     return new SomeEntity(
-      row.id,
-      row.name,
-      row.email,
-      row.status,
-      row.created_at,
-      row.updated_at,
-      row.deleted_at,
+      props.id,
+      props.name,
+      props.email,
+      props.status,
+      props.createdAt,
+      props.updatedAt,
+      props.deletedAt,
     );
   }
 
@@ -83,15 +91,16 @@ export class SomeEntity {
 
 ## Rules
 
-- **Private constructor** — entities are only created via `fromRecord()`. No `new Entity()` outside the class.
-- **`fromRecord()` factory** — accepts a raw DB row type (from `infrastructure/repositories/types/`) and maps it to the entity.
+- **Private constructor** — entities are only created via `create()`. No `new Entity()` outside the class.
+- **`create(props)` factory** — accepts a plain object with camelCase properties. The props shape is defined inline in the method signature — no external type import needed. The repository is responsible for mapping DB row (snake_case) to entity props (camelCase).
+- **Domain stays pure** — entities never import from `infrastructure/`, `shared/`, or `modules/`. The domain layer has zero outward dependencies.
 - **Readonly getters** — all properties accessed via getters. External code never sets entity state directly.
 - **Business methods** — entity enforces its own invariants. Use cases call entity methods like `entity.activate()` or `entity.changeRole()`, never `entity.status = 'active'`.
 - **No HTTP awareness** — entities never know about requests, responses, status codes, or Express.
 - **No repository calls** — entities never call the database. That's the use case's job.
 - **Value objects as optional properties** — entities may hold value objects (e.g., `UserEntity` holds `UserMembership[]`). These are loaded optionally by the repository based on the use case's needs.
 - **One entity per file** — no multi-entity files.
-- **Import only from** — `infrastructure/repositories/types/` (for row types), `domain/enums/`, `domain/value-objects/`.
+- **Import only from** — `domain/enums/`, `domain/value-objects/`. Never from `infrastructure/` or any outer layer.
 
 ## Entities in This Project
 
