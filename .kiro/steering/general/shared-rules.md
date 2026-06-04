@@ -18,10 +18,12 @@ src/shared/
 ├── constants/       # Shared constants (route prefixes, status codes)
 ├── core/            # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 ├── middlewares/     # Global middlewares (auth, validate, role)
-└── services/        # Shared services (logger, database, jwt, swagger)
-    ├── interfaces/  # Service contract interfaces
-    ├── types/       # Service-related types
-    └── *.service.ts # Singleton implementations
+└── services/        # Shared services — one folder per service
+    ├── logger/      # Logger service (interface + implementation)
+    ├── database/    # Database service (interface + types + implementation)
+    ├── jwt/         # JWT service (interface + types + implementation)
+    ├── hash/        # Hash service (interface + implementation)
+    └── swagger/     # Swagger service (interface + config + schemas + implementation)
 ```
 
 ## Key Principles

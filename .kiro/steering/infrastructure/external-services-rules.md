@@ -93,7 +93,7 @@ The concrete class that makes HTTP calls to the third-party API.
 ```ts
 import { IEmailExternalService } from './email.external-service.interface';
 import { SendEmailParams, SendEmailResult } from './email.types';
-import { ILoggerService } from '../../../shared/services/interfaces/logger.service.interface';
+import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
 import { config } from '../../../shared/config';
 
 export class EmailExternalService implements IEmailExternalService {
@@ -122,7 +122,7 @@ Rules:
 <name>.external-service.ts imports:
   → ./<name>.external-service.interface   (co-located interface)
   → ./<name>.types                        (co-located types)
-  → shared/services/interfaces/           (for ILoggerService)
+  → shared/services/<name>/<name>.service.interface  (for ILoggerService)
   → shared/config/                        (for API keys, URLs)
   → domain/enums/                         (if needed for mapping)
 

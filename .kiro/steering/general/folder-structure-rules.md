@@ -13,18 +13,27 @@ src/
 │   ├── @types/                    # Type augmentations for third-party libraries (.d.ts files)
 │   ├── config/                    # App configuration (env vars, constants)
 │   ├── constants/                 # Shared constants (route prefixes, status codes)
-│   ├── services/                  # Shared services (logger, database, swagger, jwt)
-│   │   ├── interfaces/            # Service contract interfaces — one file per service
+│   ├── services/                  # Shared services — one folder per service (co-located)
+│   │   ├── logger/
 │   │   │   ├── logger.service.interface.ts
+│   │   │   └── logger.service.ts
+│   │   ├── database/
 │   │   │   ├── database.service.interface.ts
-│   │   │   └── jwt.service.interface.ts
-│   │   ├── types/                 # Service-related types — one file per service/concern
 │   │   │   ├── database.types.ts
-│   │   │   └── jwt.types.ts
-│   │   ├── logger.service.ts
-│   │   ├── database.service.ts
-│   │   ├── jwt.service.ts
+│   │   │   └── database.service.ts
+│   │   ├── jwt/
+│   │   │   ├── jwt.service.interface.ts
+│   │   │   ├── jwt.types.ts
+│   │   │   └── jwt.service.ts
+│   │   ├── hash/
+│   │   │   ├── hash.service.interface.ts
+│   │   │   └── hash.service.ts
 │   │   └── swagger/
+│   │       ├── swagger.service.interface.ts
+│   │       ├── swagger.config.ts
+│   │       ├── swagger.schemas.ts
+│   │       ├── swagger.service.ts
+│   │       └── docs/
 │   ├── middlewares/               # Global middlewares (auth, rate-limit, etc.)
 │   └── core/                      # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 │
@@ -145,7 +154,8 @@ application/use-cases
   → infrastructure/repositories/<entity>/<entity>.repository.interface   (never the concrete class)
   → infrastructure/repositories/<entity>/<entity>.types                  (row types, only when needed for transactions)
   → infrastructure/external-services/<service>/<service>.external-service.interface  (never the concrete class)
-  → shared/services/types/                                               (service-related types like jwt.types.ts)
+  → shared/services/<name>/<name>.types                                  (service-related types like jwt.types.ts)
+  → shared/services/<name>/<name>.service.interface                      (for IHashService, IJwtService, etc.)
   → domain/entities
   → domain/enums
 
@@ -158,7 +168,7 @@ infrastructure/repositories/<entity>/<entity>.repository.ts
 infrastructure/external-services/<service>/<service>.external-service.ts
   → ./<service>.external-service.interface   (co-located)
   → ./<service>.types                        (co-located)
-  → shared/services/interfaces/              (for ILoggerService)
+  → shared/services/<name>/<name>.service.interface  (for ILoggerService)
   → shared/config/
   → domain/enums
 ```

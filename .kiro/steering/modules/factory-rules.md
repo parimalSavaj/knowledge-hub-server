@@ -14,8 +14,8 @@ fileMatchPattern: "src/modules/*/*.factory.ts"
 ## Structure
 
 ```ts
-import { IDatabaseService } from '../../shared/services/interfaces/database.service.interface';
-import { ILoggerService } from '../../shared/services/interfaces/logger.service.interface';
+import { IDatabaseService } from '../../shared/services/database/database.service.interface';
+import { ILoggerService } from '../../shared/services/logger/logger.service.interface';
 import { UsersRepository } from '../../infrastructure/repositories/users/users.repository';
 import { RegisterUseCase } from './application/register.use-case';
 import { LoginUseCase } from './application/login.use-case';
@@ -51,7 +51,7 @@ export class AuthFactory {
   → ./application/<action>.use-case           (to instantiate use cases)
   → infrastructure/repositories/<entity>/     (CONCRETE classes — only place allowed)
   → infrastructure/external-services/<svc>/   (CONCRETE classes — only place allowed)
-  → shared/services/interfaces/               (for parameter typing: IDatabaseService, ILoggerService, IJwtService)
+  → shared/services/<name>/<name>.service.interface  (for parameter typing: IDatabaseService, ILoggerService, IJwtService)
 ```
 
 ## Why the Factory Exists

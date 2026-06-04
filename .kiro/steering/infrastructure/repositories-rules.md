@@ -89,7 +89,7 @@ Rules:
 The concrete class with raw SQL queries. The repository is responsible for mapping DB rows (snake_case) to entity props (camelCase) via `Entity.create(props)`.
 
 ```ts
-import { IDatabaseService } from '../../../shared/services/interfaces/database.service.interface';
+import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
 import { UserEntity } from '../../../domain/entities/user.entity';
 import { AuthProvider } from '../../../domain/enums/auth-provider.enum';
 import { IUsersRepository } from './users.repository.interface';
@@ -147,11 +147,12 @@ Rules:
 - Must implement its co-located interface.
 - Has `private readonly TABLE = '<table_name>'` — used in all SQL strings.
 - Has `constructor(private readonly db: IDatabaseService)` — receives the database service.
+- **Only `IDatabaseService` is injected** — no other shared services (`IHashService`, `IJwtService`, `ILoggerService`, etc.) are allowed. Business-logic services belong in use cases, not repositories.
 - All queries filter `WHERE deleted_at IS NULL` for soft-deleted tables — this is the repository's responsibility, never the use case's.
 - Returns domain entities via a private `toEntity(row)` method that maps row (snake_case) to `Entity.create(props)` (camelCase) — never returns raw rows to the use case. (Exception: tables with no entity return row types directly.)
 - Every repository with a domain entity must have a `private toEntity(row: <Row>): <Entity>` method — this is the single place for row-to-entity mapping.
 - Uses parameterized queries (`$1`, `$2`, ...) — never string interpolation for values.
-- No business logic — only data access and entity mapping.
+- No business logic — only data access and entity mapping. Data arrives already prepared (e.g., passwords are already hashed by the use case before reaching the repository).
 - Never accepts a `PoolClient` parameter — transaction control belongs in use cases per transaction rules.
 
 ## Import Rules
@@ -162,7 +163,7 @@ Rules:
   → ./name.types                    (co-located row type)
   → domain/entities/                (for Entity.create() call)
   → domain/enums/                   (for enum casting in toEntity mapping)
-  → shared/services/interfaces/     (for IDatabaseService)
+  → shared/services/<name>/<name>.service.interface  (for IDatabaseService)
 
 <name>.repository.interface.ts imports:
   → domain/entities/                (return types)

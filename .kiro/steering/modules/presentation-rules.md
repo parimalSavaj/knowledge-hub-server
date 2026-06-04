@@ -26,8 +26,8 @@ Registers all endpoints for the module. Calls the factory once to get the contro
 
 ```ts
 import { Router } from 'express';
-import { IDatabaseService } from '../../../shared/services/interfaces/database.service.interface';
-import { ILoggerService } from '../../../shared/services/interfaces/logger.service.interface';
+import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
+import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
 import { validate } from '../../../shared/middlewares/validate.middleware';
 import { AuthFactory } from '../auth.factory';
 import { registerSchema, loginSchema } from './auth.validation';
@@ -158,7 +158,7 @@ presentation/routes imports:
   → ../factory                           (to get controller)
   → ./validation                         (Zod schemas)
   → shared/middlewares/                   (auth, validate)
-  → shared/services/interfaces/          (for constructor params typing)
+  → shared/services/<name>/<name>.service.interface  (for constructor params typing)
 
 presentation/controller imports:
   → ../application/use-cases             (use case classes)

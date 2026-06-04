@@ -112,6 +112,43 @@ Use Case Rules:
 - Never imports concrete repository or external service classes — only their interfaces.
 - Never writes raw SQL — that's the repository's job.
 
+## Shared Service Injection Rule
+
+Shared services (`IHashService`, `IJwtService`, `ILoggerService`, etc.) are **always injected into use cases** — never into repositories or entities.
+
+### Why
+
+- Operations like password hashing, token signing, logging decisions, and notifications are **business decisions**. They represent application-level intent ("hash this password before storing"), not data access concerns.
+- The **use case** is the place where these decisions are made — it orchestrates *what* happens and delegates *how* to the injected service.
+- The **repository** is purely data access — it receives already-prepared data (e.g., an already-hashed password string) and stores it. It never needs to know how that data was prepared.
+- The **entity** is a pure domain object — it has no dependencies on external libraries or services. It never calls hash, sign, or any async operation.
+
+### Rules
+
+- Shared services are injected into use cases via the factory's `create()` method — the factory passes the service interface to the use case constructor.
+- Repositories receive **only** `IDatabaseService` as a constructor dependency — no other shared services (no `IHashService`, no `IJwtService`, no `ILoggerService`).
+- Entities receive **zero** injected services — they are pure, self-contained domain objects with no outward dependencies.
+- If a use case needs to hash a password, it calls `this.hashService.hash(plain)` and then passes the hashed result to the repository.
+- If a use case needs to sign a token, it calls `this.jwtService.signAccessToken(payload)` — the repository never knows tokens exist.
+- Third-party library calls (bcrypt, jsonwebtoken, etc.) are **always wrapped behind a shared service interface** — never called directly inside use cases, repositories, or entities.
+
+### Correct Flow Example (Password Hashing)
+
+```
+Controller → passes raw password via DTO
+  → Use Case → calls hashService.hash(dto.password), passes hashed value to repo
+    → Repository → stores the hashed string it received (doesn't know or care it's hashed)
+```
+
+### Anti-Patterns (Never Do This)
+
+| ❌ Wrong | Why |
+|---|---|
+| bcrypt inside repository | Repo is data access only — no business logic |
+| bcrypt inside entity | Breaks domain purity, adds async to sync layer |
+| bcrypt called directly in use case (without interface) | Tight coupling, untestable, not swappable |
+| `IHashService` injected into repository | Repo should only receive `IDatabaseService` |
+
 ## Import Rules
 
 ```
@@ -120,8 +157,8 @@ application/use-cases imports:
   → infrastructure/repositories/<entity>/<entity>.repository.interface   (never concrete class)
   → infrastructure/repositories/<entity>/<entity>.types                  (row types, only for transactions)
   → infrastructure/external-services/<service>/<service>.external-service.interface
-  → shared/services/interfaces/                                          (for IJwtService, ILoggerService, etc.)
-  → shared/services/types/                                               (for JwtPayload, etc.)
+  → shared/services/<name>/<name>.service.interface  (for IJwtService, ILoggerService, etc.)
+  → shared/services/<name>/<name>.types              (for JwtPayload, etc.)
   → shared/core/api-error                                                (for named error classes)
   → domain/entities/                                                     (for entity types)
   → domain/enums/                                                        (for enum values)
