@@ -36,22 +36,22 @@ src/
 │   └── errors/                    # Domain-level errors (no HTTP codes)
 │       └── domain-errors.ts
 │
-├── infrastructure/                # Data access layer
-│   └── repositories/              # Everything for a repository lives together in one folder
-│       ├── interfaces/            # Repository contract interfaces — one file per entity
-│       │   ├── users.repository.interface.ts
-│       │   ├── organizations.repository.interface.ts
-│       │   ├── org-members.repository.interface.ts
-│       │   └── refresh-tokens.repository.interface.ts
-│       ├── types/                 # Raw DB row types — one file per entity
-│       │   ├── users.types.ts
-│       │   ├── organizations.types.ts
-│       │   ├── org-members.types.ts
-│       │   └── refresh-tokens.types.ts
-│       ├── users.repository.ts               # Implementation
-│       ├── organizations.repository.ts
-│       ├── org-members.repository.ts
-│       └── refresh-tokens.repository.ts
+├── infrastructure/                # Data access and external integration layer
+│   ├── repositories/              # Database access — one folder per entity/table
+│   │   ├── users/
+│   │   │   ├── users.repository.interface.ts
+│   │   │   ├── users.types.ts
+│   │   │   └── users.repository.ts
+│   │   ├── organizations/
+│   │   │   ├── organizations.repository.interface.ts
+│   │   │   ├── organizations.types.ts
+│   │   │   └── organizations.repository.ts
+│   │
+│   └── external-services/         # Third-party API integrations — one folder per service
+│       └── <service-name>/
+│           ├── <name>.external-service.interface.ts
+│           ├── <name>.types.ts
+│           └── <name>.external-service.ts
 │
 ├── modules/                       # All modules — system and feature
 │   ├── system/                    # System-level routes (no business logic, no DB)
@@ -96,15 +96,20 @@ src/
 - For detailed rules, see `.kiro/steering/domain/` — entities, value objects, and enums each have their own rules file.
 
 ### `infrastructure/`
-- Contains all database interaction code — raw SQL only, no business logic.
-- `repositories/` has three parts:
-  - `interfaces/` — one `<entity>.repository.interface.ts` per entity. Imports only from `domain/`.
-  - `types/` — one `<entity>.types.ts` per entity. Raw DB row `type` aliases. Imports only from `domain/`.
-  - `*.repository.ts` (flat) — implementations. Each:
-    - Imports its interface from `./interfaces/` and its row type from `./types/`.
+- Contains all database interaction and external API integration code — no business logic.
+- For detailed rules, see `.kiro/steering/infrastructure/` — repositories and external services each have their own rules file.
+- `repositories/` — one folder per entity/table, each containing:
+  - `<name>.repository.interface.ts` — contract. Imports only from `domain/`.
+  - `<name>.types.ts` — raw DB row type. Plain `type` alias.
+  - `<name>.repository.ts` — implementation. Each:
+    - Imports its co-located interface and row type.
     - Has `private readonly TABLE = '<table_name>'` used in all SQL strings.
     - Has `constructor(private readonly db: IDatabaseService)`.
     - Never accepts a `PoolClient` parameter — transaction control belongs in use cases.
+- `external-services/` — one folder per third-party service, each containing:
+  - `<name>.external-service.interface.ts` — contract. Use cases depend on this.
+  - `<name>.types.ts` — request/response types for the external API.
+  - `<name>.external-service.ts` — implementation (HTTP calls).
 
 ### `modules/`
 - Every route in the app lives inside `modules/` — no exceptions.
@@ -124,23 +129,32 @@ src/
 factory (module root)
   → presentation/controller
   → application/use-cases
-  → infrastructure/repositories
+  → infrastructure/repositories/<entity>/
+  → infrastructure/external-services/<service>/
 
 presentation/routes
   → factory
   → presentation/validation
 
 application/use-cases
-  → infrastructure/repositories/interfaces/<entity>.repository.interface   (never the concrete class)
-  → infrastructure/repositories/types/<entity>.types                       (row types, only when needed for transactions)
-  → shared/services/types/                                                 (service-related types like jwt.types.ts)
+  → infrastructure/repositories/<entity>/<entity>.repository.interface   (never the concrete class)
+  → infrastructure/repositories/<entity>/<entity>.types                  (row types, only when needed for transactions)
+  → infrastructure/external-services/<service>/<service>.external-service.interface  (never the concrete class)
+  → shared/services/types/                                               (service-related types like jwt.types.ts)
   → domain/entities
   → domain/enums
 
-infrastructure/repositories/<entity>.repository.ts
-  → ./interfaces/<entity>.repository.interface   (same folder)
-  → ./types/<entity>.types                       (same folder)
+infrastructure/repositories/<entity>/<entity>.repository.ts
+  → ./<entity>.repository.interface   (co-located)
+  → ./<entity>.types                  (co-located)
   → domain/entities
+  → domain/enums
+
+infrastructure/external-services/<service>/<service>.external-service.ts
+  → ./<service>.external-service.interface   (co-located)
+  → ./<service>.types                        (co-located)
+  → shared/services/interfaces/              (for ILoggerService)
+  → shared/config/
   → domain/enums
 ```
 - `application/` never imports from `presentation/` or the concrete `*.repository.ts` files.
