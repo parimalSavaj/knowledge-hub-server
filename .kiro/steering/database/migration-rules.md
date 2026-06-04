@@ -1,3 +1,9 @@
+---
+description: Rules for database migrations and seeding
+inclusion: fileMatch
+fileMatchPattern: "migrations/**"
+---
+
 # Migration & Seeding Rules
 
 ## Overview
@@ -47,22 +53,18 @@ This generates a timestamped file in `migrations/` with a blank template.
 
 ## Column Type Standards
 
-- Always use `TIMESTAMPTZ` (not `TIMESTAMP`) for all timestamp columns — `TIMESTAMP` has no timezone awareness and causes bugs in any environment that is not strictly UTC.
+- Always use `TIMESTAMPTZ` (not `TIMESTAMP`) for all timestamp columns.
 - Use `TEXT` instead of `VARCHAR(n)` for variable-length strings with no meaningful upper bound (e.g. tokens, URLs, descriptions). Use `VARCHAR(n)` only when the length limit is a real business constraint (e.g. `name VARCHAR(100)`).
 
 ## Constraints
 
-- Add a `CHECK` constraint for any column that has a fixed set of valid values (e.g. roles, statuses, types). This enforces correctness at the DB level regardless of how data is inserted.
+- Add a `CHECK` constraint for any column that has a fixed set of valid values (e.g. roles, statuses, types).
 - Define all `CHECK` constraints inline with the column or as a named table constraint in the same migration.
 
 ```sql
--- inline
 role VARCHAR(50) NOT NULL DEFAULT 'member'
   CONSTRAINT org_members_role_check
   CHECK (role IN ('owner', 'admin', 'member', 'viewer'))
-
--- or as named table constraint
-CONSTRAINT org_members_role_check CHECK (role IN ('owner', 'admin', 'member', 'viewer'))
 ```
 
 ## Soft Delete
@@ -70,44 +72,34 @@ CONSTRAINT org_members_role_check CHECK (role IN ('owner', 'admin', 'member', 'v
 All business data tables use soft delete — rows are never physically removed.
 
 - Add `deleted_at TIMESTAMPTZ NULL` to every business table (`users`, `organizations`, `org_members`, etc.).
-- `deleted_at IS NULL` means the record is active. `deleted_at IS NOT NULL` means it is soft-deleted.
-- Never add `deleted_at` to audit/security tables like `refresh_tokens` or `migrations` — those use hard delete or revocation flags.
-- Replace column-level `UNIQUE` constraints with partial unique indexes `WHERE deleted_at IS NULL` so that deleted records do not block reuse of unique values (e.g. a deleted user's email can be re-registered).
+- `deleted_at IS NULL` means active. `deleted_at IS NOT NULL` means soft-deleted.
+- Never add `deleted_at` to audit/security tables like `refresh_tokens` or `migrations`.
+- Replace column-level `UNIQUE` constraints with partial unique indexes `WHERE deleted_at IS NULL`.
 
 ```sql
--- Instead of: email VARCHAR(255) NOT NULL UNIQUE
 email VARCHAR(255) NOT NULL,
--- ...
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
   ON users (email)
   WHERE deleted_at IS NULL;
 ```
 
-- Application queries must always filter `WHERE deleted_at IS NULL` — repositories are responsible for this, never the use case.
+## Indexes
 
+Add indexes in the same migration file as the table creation.
 
-
-Add indexes in the same migration file as the table creation. Do not create a separate migration just for indexes unless adding them to an existing table.
-
-Rules:
-- Every foreign key column must have an index — PostgreSQL does not create them automatically.
-- Every column used in a `WHERE`, `ORDER BY`, or `JOIN` clause in the application must have an index.
-- Use partial indexes (`WHERE` clause) when only a subset of rows is queried (e.g. active tokens, non-deleted records).
-- Always use `IF NOT EXISTS` on index creation for idempotency.
-- Name indexes consistently: `idx_{table}_{column(s)}` or `idx_{table}_{description}` for partial indexes.
+- Every foreign key column must have an index.
+- Every column used in `WHERE`, `ORDER BY`, or `JOIN` must have an index.
+- Use partial indexes (`WHERE` clause) when only a subset of rows is queried.
+- Always use `IF NOT EXISTS` on index creation.
+- Name indexes: `idx_{table}_{column(s)}` or `idx_{table}_{description}` for partial indexes.
 
 ```sql
--- FK index
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id ON refresh_tokens (user_id);
-
--- Partial index — only unrevoked tokens
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_active ON refresh_tokens (expires_at)
   WHERE NOT revoked;
 ```
 
-Note: `UNIQUE` constraints automatically create an index — no need to add one manually for unique columns.
-
-### Example Migration
+## Example Migration
 
 ```sql
 -- Migration: create-users-table
@@ -116,14 +108,19 @@ Note: `UNIQUE` constraints automatically create an index — no need to add one 
 CREATE TABLE IF NOT EXISTS users (
   id          SERIAL PRIMARY KEY,
   name        VARCHAR(100) NOT NULL,
-  email       VARCHAR(255) NOT NULL UNIQUE,
+  email       VARCHAR(255) NOT NULL,
   password    VARCHAR(255) NOT NULL,
   role        VARCHAR(50) NOT NULL DEFAULT 'user'
                 CONSTRAINT users_role_check
                 CHECK (role IN ('user', 'admin')),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at  TIMESTAMPTZ NULL
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
+  ON users (email)
+  WHERE deleted_at IS NULL;
 ```
 
 ## Running Migrations
@@ -132,22 +129,14 @@ CREATE TABLE IF NOT EXISTS users (
 npm run db:migrate
 ```
 
-The runner:
-1. Validates all required env vars are present.
-2. Verifies DB connection.
-3. Bootstraps the `migrations` tracking table if it doesn't exist.
-4. Runs all pending `.sql` files in timestamp order.
-5. Records each applied migration in the `migrations` table.
-
 ## Seeding Rules
 
 Seeds live in `scripts/database/seed.ts`.
 
-- Seeds are for **development and testing only** — never run in production (the script guards against this).
-- Seed data must be idempotent — use `ON CONFLICT DO NOTHING` or check before inserting.
-- Seeds run inside a single transaction — all succeed or all roll back.
+- Seeds are for **development and testing only** — never run in production.
+- Seed data must be idempotent — use `ON CONFLICT DO NOTHING`.
+- Seeds run inside a single transaction.
 - Never put real user data or production data in seed files.
-- Keep seeds minimal — only what's needed to develop and test features locally.
 
 ```bash
 npm run db:seed
@@ -156,7 +145,7 @@ npm run db:seed
 ## Rules
 
 - Never write raw SQL schema changes directly in the DB — always use a migration file.
-- Never run `db:seed` in production — the script will exit with an error if `NODE_ENV=production`.
+- Never run `db:seed` in production.
 - Migration files are append-only — never edit or delete an applied migration.
 - Every business table must have `created_at`, `updated_at`, and `deleted_at` columns using `TIMESTAMPTZ`.
 - Foreign key constraints must be defined in the same migration as the dependent table.

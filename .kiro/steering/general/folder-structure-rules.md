@@ -1,3 +1,8 @@
+---
+description: High-level project layout showing all folders, files, and import direction rules
+inclusion: auto
+---
+
 # Folder Structure Rules
 
 ## Project Layout

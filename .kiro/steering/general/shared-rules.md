@@ -1,4 +1,5 @@
 ---
+description: Summary of the shared layer (services, core, config, middlewares) — cross-cutting concerns
 inclusion: auto
 ---
 
@@ -6,40 +7,35 @@ inclusion: auto
 
 ## Overview
 
-`src/shared/` contains cross-cutting concerns used across the entire app. Nothing feature-specific or business-logic-related lives here.
+`src/shared/` contains cross-cutting concerns used across the entire app. Nothing feature-specific lives here.
 
-## Folder Structure
+## Structure
 
 ```
 src/shared/
-├── @types/          # Type augmentations for third-party libraries (.d.ts files only)
+├── @types/          # .d.ts augmentations for third-party libraries
 ├── config/          # App configuration (env vars parsed with Zod)
 ├── constants/       # Shared constants (route prefixes, status codes)
 ├── core/            # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
-├── middlewares/     # Global middlewares (auth, validate, rate-limit)
+├── middlewares/     # Global middlewares (auth, validate, role)
 └── services/        # Shared services (logger, database, jwt, swagger)
-    ├── interfaces/  # Service contract interfaces — one file per service
-    ├── types/       # Service-related types — one file per service/concern
-    └── *.service.ts # Service implementations
+    ├── interfaces/  # Service contract interfaces
+    ├── types/       # Service-related types
+    └── *.service.ts # Singleton implementations
 ```
 
-## General Rules
+## Key Principles
 
-- Never put feature-specific or business logic inside `shared/`.
-- No routes inside `shared/` — all routes live inside `modules/`.
-- Import from shared using relative paths (e.g., `../../shared/services/interfaces/logger.service.interface`).
+- Services use singleton pattern — `private constructor` + `static getInstance()`.
+- Services instantiated in `server.ts`, passed into `App.create()` via interfaces.
+- `core/` has ApiError subclasses (NotFoundError, ConflictError, etc.) — use cases throw these.
 - Enums do NOT live here — all enums live in `src/domain/enums/`.
 
-## Detailed Rules Per Subfolder
+## Detailed Rules
 
-Detailed rules for each subfolder are auto-loaded via `fileMatch` when files in that folder are read or edited:
-
-- **Services** (`.kiro/steering/shared/services-rules.md`) — Singleton services, interfaces in `interfaces/`, types in `types/`, wiring via `server.ts` → `App.create()`.
-
-- **Core** (`.kiro/steering/shared/core-rules.md`) — ApiError subclasses, ApiResponse wrapper, global ErrorHandler. All in one folder, no sub-splitting.
-
-- **Config** (`.kiro/steering/shared/config-rules.md`) — Single `config/index.ts` validated with Zod at boot. Only place that reads `process.env`.
-
-- **Middlewares** (`.kiro/steering/shared/middlewares-rules.md`) — Auth, role, and validate middlewares. Plain functions, no business logic.
-
-- **@types** (`.kiro/steering/shared/types-rules.md`) — `.d.ts` augmentations for third-party libraries only (e.g., extending Express Request).
+Loaded via `fileMatch` when editing files in these folders:
+- `.kiro/steering/shared/services-rules.md`
+- `.kiro/steering/shared/core-rules.md`
+- `.kiro/steering/shared/config-rules.md`
+- `.kiro/steering/shared/middlewares-rules.md`
+- `.kiro/steering/shared/types-rules.md`

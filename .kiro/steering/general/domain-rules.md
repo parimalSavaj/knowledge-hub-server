@@ -1,4 +1,5 @@
 ---
+description: Summary of the domain layer (entities, enums, value objects) — pure, no outward imports
 inclusion: auto
 ---
 
@@ -6,37 +7,29 @@ inclusion: auto
 
 ## Overview
 
-`src/domain/` is the purest layer in the application — it contains entities, value objects, enums, and domain errors. Nothing in this folder imports from `infrastructure/`, `modules/`, or `shared/services/`.
+`src/domain/` is the purest layer — entities, value objects, enums. Nothing in this folder imports from `infrastructure/`, `modules/`, or `shared/`.
 
-## Folder Structure
+## Structure
 
 ```
 src/domain/
-├── entities/        # Entity classes — aggregate roots with business logic
-│   ├── user.entity.ts
-│   └── organization.entity.ts
-├── value-objects/   # Immutable objects that describe entity attributes
-│   ├── user-membership.value-object.ts
-│   └── org-member.value-object.ts
-├── enums/           # Shared TypeScript enums
-│   └── org-role.enum.ts
+├── entities/        # Entity classes with private constructor + static create(props)
+├── value-objects/   # Immutable objects describing entity attributes
+├── enums/           # Shared TypeScript string enums
 └── errors/          # Domain-level errors (no HTTP codes)
-    └── domain-errors.ts
 ```
 
-## General Rules
+## Key Principles
 
-- The lowest layer — zero imports from any other `src/` folder.
-- No `types/` folder in domain — types live at the layer that owns them (`shared/services/types/`, `infrastructure/repositories/types/`, or module-level `types/`).
-- No business logic leaks upward — use cases call entity methods, never mutate entity state directly.
-- Entities and value objects are the only place where domain invariants are enforced.
+- Zero imports from any outer layer — domain is the innermost layer.
+- Entities use `static create(props)` factory — props are camelCase, defined inline. No infrastructure imports.
+- Repository does the mapping from DB row (snake_case) → entity props (camelCase).
+- Value objects are immutable, no ID, replaceable.
+- Enums are string-valued, UPPER_SNAKE_CASE keys, lowercase values matching DB.
 
-## Detailed Rules Per Subfolder
+## Detailed Rules
 
-Detailed rules for each subfolder are auto-loaded via `fileMatch` when files in that folder are read or edited:
-
-- **Entities** (`.kiro/steering/domain/entities-rules.md`) — Aggregate roots with private constructors, `fromRecord()` factory, readonly getters, and business methods that enforce invariants.
-
-- **Value Objects** (`.kiro/steering/domain/value-objects-rules.md`) — Immutable, no IDs, replaceable. Used inside entities to describe related data.
-
-- **Enums** (`.kiro/steering/domain/enums-rules.md`) — Shared TypeScript enums used across domain and infrastructure layers.
+Loaded via `fileMatch` when editing files in these folders:
+- `.kiro/steering/domain/entities-rules.md`
+- `.kiro/steering/domain/enums-rules.md`
+- `.kiro/steering/domain/value-objects-rules.md`

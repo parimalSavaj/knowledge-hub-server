@@ -1,3 +1,8 @@
+---
+description: Cross-cutting TypeScript and coding standards applied to all files
+inclusion: auto
+---
+
 # General Rules
 
 - Use TypeScript strict mode.
