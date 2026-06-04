@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for HTTP primitives (ApiError, ApiResponse, ErrorHandler)
+inclusion: fileMatch
+fileMatchPattern: "src/shared/core/**"
 ---
 
 # Shared Core Rules

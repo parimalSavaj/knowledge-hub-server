@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for third-party type augmentations (.d.ts declaration files)
+inclusion: fileMatch
+fileMatchPattern: "src/shared/@types/**"
 ---
 
 # Shared @types Rules

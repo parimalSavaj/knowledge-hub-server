@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for shared services (singleton pattern, interfaces, types, wiring)
+inclusion: fileMatch
+fileMatchPattern: "src/shared/services/**"
 ---
 
 # Shared Services Rules

@@ -33,7 +33,7 @@ src/domain/
 
 ## Detailed Rules Per Subfolder
 
-Before making any change inside `src/domain/`, read the specific rules file for that subfolder first.
+Detailed rules for each subfolder are auto-loaded via `fileMatch` when files in that folder are read or edited:
 
 - **Entities** (`.kiro/steering/domain/entities-rules.md`) — Aggregate roots with private constructors, `fromRecord()` factory, readonly getters, and business methods that enforce invariants.
 

@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for domain entities (private constructor, fromRecord factory, getters, business methods)
+inclusion: fileMatch
+fileMatchPattern: "src/domain/entities/**"
 ---
 
 # Entity Rules

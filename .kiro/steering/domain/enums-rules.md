@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for domain enums (string-valued, UPPER_SNAKE_CASE keys, one per file)
+inclusion: fileMatch
+fileMatchPattern: "src/domain/enums/**"
 ---
 
 # Enum Rules

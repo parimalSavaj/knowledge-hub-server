@@ -32,7 +32,7 @@ src/shared/
 
 ## Detailed Rules Per Subfolder
 
-Before making any change inside `src/shared/`, read the specific rules file for that subfolder first.
+Detailed rules for each subfolder are auto-loaded via `fileMatch` when files in that folder are read or edited:
 
 - **Services** (`.kiro/steering/shared/services-rules.md`) — Singleton services, interfaces in `interfaces/`, types in `types/`, wiring via `server.ts` → `App.create()`.
 
