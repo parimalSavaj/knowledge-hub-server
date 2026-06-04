@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for domain value objects (immutable, no ID, private constructor, equals method)
+inclusion: fileMatch
+fileMatchPattern: "src/domain/value-objects/**"
 ---
 
 # Value Object Rules

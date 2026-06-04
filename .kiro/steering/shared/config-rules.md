@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for app configuration (env vars, Zod validation, .env files)
+inclusion: fileMatch
+fileMatchPattern: "src/shared/config/**"
 ---
 
 # Shared Config Rules

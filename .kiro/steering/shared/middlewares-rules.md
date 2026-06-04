@@ -1,5 +1,7 @@
 ---
-inclusion: manual
+description: Rules for global middlewares (auth, role, validate)
+inclusion: fileMatch
+fileMatchPattern: "src/shared/middlewares/**"
 ---
 
 # Shared Middlewares Rules
