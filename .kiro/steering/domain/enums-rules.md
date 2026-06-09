@@ -14,11 +14,10 @@ fileMatchPattern: "src/domain/enums/**"
 ## Structure
 
 ```ts
-export enum OrgRole {
-  OWNER = 'owner',
-  ADMIN = 'admin',
-  MEMBER = 'member',
-  VIEWER = 'viewer',
+export enum <PascalName> {
+  <UPPER_SNAKE_KEY> = '<lowercase_db_value>',
+  <UPPER_SNAKE_KEY> = '<lowercase_db_value>',
+  // ...
 }
 ```
 

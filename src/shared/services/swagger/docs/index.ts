@@ -1,4 +1,5 @@
 import { healthDocs } from "./health.docs";
+import { authDocs } from "./auth.docs";
 
 /**
  * Merge all route docs here.
@@ -6,4 +7,5 @@ import { healthDocs } from "./health.docs";
  */
 export const swaggerPaths: Record<string, Record<string, unknown>> = {
   ...healthDocs,
+  ...authDocs,
 };

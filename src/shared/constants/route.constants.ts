@@ -6,6 +6,7 @@ export const ROUTE_PREFIXES = {
   BASE_PATH: "/api/v1",
   DOCS: "/docs",
   HEALTH: "/health",
+  AUTH: "/auth",
 };
 
 /**
@@ -17,5 +18,8 @@ export const ROUTES = {
   HEALTH: {
     ROOT: "/",
     ERROR: "/error",
+  },
+  AUTH: {
+    REGISTER: "/register",
   },
 };

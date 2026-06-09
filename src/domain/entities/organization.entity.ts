@@ -1,32 +1,56 @@
-import { OrganizationRow } from '../../infrastructure/repositories/organizations/organizations.types';
-import { OrgMember } from '../value-objects/org-member.value-object';
-
 export class OrganizationEntity {
-  private _members: OrgMember[] | null = null;
-
   private constructor(
-    private readonly _id: number,
+    private readonly _id: string,
     private readonly _name: string,
     private readonly _slug: string,
     private readonly _createdAt: Date,
     private readonly _updatedAt: Date,
     private readonly _deletedAt: Date | null,
-  ) {}
+  ) {
+    this.validate();
+  }
 
-  // --- Factory ---
-  static fromRecord(row: OrganizationRow): OrganizationEntity {
+  // --- Invariant Validation ---
+  private validate(): void {
+    // No cross-field invariants yet — add domain rules here when needed
+  }
+
+  // --- Slug Generation ---
+  /**
+   * Generates a URL-safe slug from a base name with a random suffix to avoid collisions.
+   * Lives here because slug format is a domain rule for organizations.
+   */
+  static generateSlug(baseName: string): string {
+    const base = baseName
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+    const suffix = Math.random().toString(36).substring(2, 8);
+    return `${base}-${suffix}`;
+  }
+
+  // --- Factory: create a personal workspace for a newly registered user ---
+  /**
+   * Encapsulates the naming convention for personal workspaces.
+   * Change the name rule here and it propagates to every use case automatically.
+   */
+  static createPersonalWorkspace(props: { id: string; ownerName: string }): OrganizationEntity {
+    const now = new Date();
     return new OrganizationEntity(
-      row.id,
-      row.name,
-      row.slug,
-      row.created_at,
-      row.updated_at,
-      row.deleted_at,
+      props.id,
+      `${props.ownerName}'s Workspace`,
+      OrganizationEntity.generateSlug(props.ownerName),
+      now,
+      now,
+      null,
     );
   }
 
   // --- Getters ---
-  get id(): number {
+  get id(): string {
     return this._id;
   }
 
@@ -44,29 +68,5 @@ export class OrganizationEntity {
 
   get updatedAt(): Date {
     return this._updatedAt;
-  }
-
-  get deletedAt(): Date | null {
-    return this._deletedAt;
-  }
-
-  get members(): OrgMember[] {
-    if (this._members === null) {
-      throw new Error('Members not loaded — use a repository method that loads them');
-    }
-    return this._members;
-  }
-
-  // --- Business Methods ---
-  get isDeleted(): boolean {
-    return this._deletedAt !== null;
-  }
-
-  get hasMembersLoaded(): boolean {
-    return this._members !== null;
-  }
-
-  setMembers(members: OrgMember[]): void {
-    this._members = members;
   }
 }

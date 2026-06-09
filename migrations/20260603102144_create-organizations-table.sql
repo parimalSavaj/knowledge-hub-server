@@ -2,7 +2,7 @@
 -- Created at: 2026-06-03T10:21:44.000Z
 
 CREATE TABLE IF NOT EXISTS organizations (
-  id          SERIAL PRIMARY KEY,
+  id          UUID PRIMARY KEY,
   name        VARCHAR(100) NOT NULL,
   slug        VARCHAR(100) NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),

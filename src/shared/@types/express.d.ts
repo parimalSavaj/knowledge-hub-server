@@ -1,4 +1,4 @@
-import { AuthenticatedUser } from "../services/types/jwt.types";
+import { AuthenticatedUser } from "../services/jwt/jwt.types";
 
 declare global {
   namespace Express {

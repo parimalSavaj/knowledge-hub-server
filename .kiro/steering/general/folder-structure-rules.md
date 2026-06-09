@@ -25,15 +25,7 @@ src/
 │   │   │   ├── jwt.service.interface.ts
 │   │   │   ├── jwt.types.ts
 │   │   │   └── jwt.service.ts
-│   │   ├── hash/
-│   │   │   ├── hash.service.interface.ts
-│   │   │   └── hash.service.ts
-│   │   └── swagger/
-│   │       ├── swagger.service.interface.ts
-│   │       ├── swagger.config.ts
-│   │       ├── swagger.schemas.ts
-│   │       ├── swagger.service.ts
-│   │       └── docs/
+│   │   └── ...                    # hash/, id/, swagger/, etc.
 │   ├── middlewares/               # Global middlewares (auth, rate-limit, etc.)
 │   └── core/                      # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 │

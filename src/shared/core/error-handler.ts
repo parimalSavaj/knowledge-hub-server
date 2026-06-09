@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { ApiError } from "./api-error";
 import { HTTP_STATUS } from "../constants/status-code.constants";
-import { LoggerService } from "../services/logger.service";
+import { LoggerService } from "../services/logger/logger.service";
 import { config } from "../config";
+import { DomainValidationError } from "../../domain/errors/domain-validation.error";
 
 export class ErrorHandler {
   static handleError(error: unknown, _req: Request, res: Response, _next: NextFunction) {
@@ -18,6 +19,9 @@ export class ErrorHandler {
     };
 
     if (error instanceof ApiError) {
+      logger.error(error.message, error);
+      payload = error.toJSON();
+    } else if (error instanceof DomainValidationError) {
       logger.error(error.message, error);
       payload = error.toJSON();
     } else if (error instanceof Error) {

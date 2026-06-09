@@ -2,9 +2,9 @@
 -- Created at: 2026-06-03T10:21:49.000Z
 
 CREATE TABLE IF NOT EXISTS org_members (
-  id              SERIAL PRIMARY KEY,
-  user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  organization_id INTEGER NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  id              UUID PRIMARY KEY,
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   role            VARCHAR(50) NOT NULL DEFAULT 'member'
                     CONSTRAINT org_members_role_check
                     CHECK (role IN ('owner', 'admin', 'member', 'viewer')),

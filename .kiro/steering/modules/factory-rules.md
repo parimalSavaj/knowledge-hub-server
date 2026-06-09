@@ -16,17 +16,22 @@ fileMatchPattern: "src/modules/*/*.factory.ts"
 ```ts
 import { IDatabaseService } from '../../shared/services/database/database.service.interface';
 import { ILoggerService } from '../../shared/services/logger/logger.service.interface';
-import { UsersRepository } from '../../infrastructure/repositories/users/users.repository';
-import { RegisterUseCase } from './application/register.use-case';
-import { LoginUseCase } from './application/login.use-case';
-import { AuthController } from './presentation/auth.controller';
+import { <PascalEntity>Repository } from '../../infrastructure/repositories/<entity>/<entity>.repository';
+import { <Action1>UseCase } from './application/<action1>.use-case';
+import { <Action2>UseCase } from './application/<action2>.use-case';
+import { <PascalName>Controller } from './presentation/<name>.controller';
 
-export class AuthFactory {
-  static create(db: IDatabaseService, logger: ILoggerService): AuthController {
-    const usersRepo = new UsersRepository(db);
-    const registerUseCase = new RegisterUseCase(usersRepo);
-    const loginUseCase = new LoginUseCase(usersRepo);
-    return new AuthController(registerUseCase, loginUseCase);
+export class <PascalName>Factory {
+  static create(db: IDatabaseService, logger: ILoggerService): <PascalName>Controller {
+    // 1. Create repo instances
+    const <entityRepo> = new <PascalEntity>Repository(db);
+
+    // 2. Create use case instances (inject repos + shared services)
+    const <action1>UseCase = new <Action1>UseCase(<entityRepo>, logger);
+    const <action2>UseCase = new <Action2>UseCase(<entityRepo>, logger);
+
+    // 3. Create and return controller (inject use cases)
+    return new <PascalName>Controller(<action1>UseCase, <action2>UseCase);
   }
 }
 ```
@@ -59,4 +64,3 @@ export class AuthFactory {
 - Keeps dependency injection explicit and testable — no hidden `new` calls inside use cases or controllers.
 - Isolates infrastructure knowledge — use cases and controllers never know which concrete repository or service they use.
 - Single place to look when debugging "what is wired to what" in a module.
-

@@ -16,27 +16,10 @@ fileMatchPattern: "src/shared/services/**"
 Each service gets its own folder containing its interface, types (if needed), and implementation:
 
 ```
-src/shared/services/
-├── logger/
-│   ├── logger.service.interface.ts
-│   └── logger.service.ts
-├── database/
-│   ├── database.service.interface.ts
-│   ├── database.types.ts
-│   └── database.service.ts
-├── jwt/
-│   ├── jwt.service.interface.ts
-│   ├── jwt.types.ts
-│   └── jwt.service.ts
-├── hash/
-│   ├── hash.service.interface.ts
-│   └── hash.service.ts
-└── swagger/
-    ├── swagger.service.interface.ts
-    ├── swagger.config.ts
-    ├── swagger.schemas.ts
-    ├── swagger.service.ts
-    └── docs/
+src/shared/services/<name>/
+├── <name>.service.interface.ts    # Contract interface
+├── <name>.types.ts                # Service-related types (optional, only when needed)
+└── <name>.service.ts              # Singleton implementation
 ```
 
 ## Folder Rules
@@ -80,25 +63,13 @@ src/shared/services/
 
 ## Import Rules
 
-- `server.ts` imports concrete classes from `shared/services/<name>/<name>.service` to call `getInstance()`.
-- `app.ts` and all other consumers import only the interface from `shared/services/<name>/<name>.service.interface`.
-- Types are imported from `shared/services/<name>/<name>.types` by whoever needs them.
+```
+server.ts imports:
+  → shared/services/<name>/<name>.service     (concrete — calls getInstance())
 
-## Import Path Examples
+app.ts and all other consumers import:
+  → shared/services/<name>/<name>.service.interface   (interface only)
 
-```ts
-// server.ts (imports concrete)
-import { LoggerService } from './shared/services/logger/logger.service';
-import { DatabaseService } from './shared/services/database/database.service';
-import { JwtService } from './shared/services/jwt/jwt.service';
-import { HashService } from './shared/services/hash/hash.service';
-
-// app.ts and modules (imports interface only)
-import { ILoggerService } from './shared/services/logger/logger.service.interface';
-import { IDatabaseService } from './shared/services/database/database.service.interface';
-import { IJwtService } from './shared/services/jwt/jwt.service.interface';
-import { IHashService } from './shared/services/hash/hash.service.interface';
-
-// Use cases importing types
-import { JwtPayload } from '../../../shared/services/jwt/jwt.types';
+Use cases importing types:
+  → shared/services/<name>/<name>.types
 ```

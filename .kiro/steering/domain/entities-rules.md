@@ -29,60 +29,71 @@ If the answer to the Lifecycle Test is "Yes" → it's likely a Value Object or C
 
 ## Structure
 
-Every entity follows this exact pattern:
+Every entity follows this pattern:
 
 ```ts
-// NO imports from infrastructure — domain is the innermost layer
+import { <EnumName> } from '../enums/<enum-name>.enum';
 
-export class SomeEntity {
+export class <Name>Entity {
   private constructor(
-    private readonly _id: number,
-    private readonly _name: string,
-    private readonly _email: string,
-    private _status: string,
+    private readonly _id: string,
+    private readonly _<field1>: <type>,
+    private readonly _<field2>: <type>,
+    // ... all DB columns as private readonly fields
     private readonly _createdAt: Date,
     private readonly _updatedAt: Date,
     private readonly _deletedAt: Date | null,
   ) {}
 
-  // --- Factory ---
+  // --- Factory: create new entity (use case calls this) ---
   static create(props: {
-    id: number;
-    name: string;
-    email: string;
-    status: string;
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt: Date | null;
-  }): SomeEntity {
-    return new SomeEntity(
+    id: string;
+    <field1>: <type>;
+    <field2>: <type>;
+    // only business-required fields — no timestamps, no deletedAt
+  }): <Name>Entity {
+    const now = new Date();
+    return new <Name>Entity(
       props.id,
-      props.name,
-      props.email,
-      props.status,
-      props.createdAt,
-      props.updatedAt,
-      props.deletedAt,
+      props.<field1>,
+      props.<field2>,
+      // ...
+      now,   // createdAt
+      now,   // updatedAt
+      null,  // deletedAt
+    );
+  }
+
+  // --- Factory: reconstruct from DB row (repository calls this) ---
+  static fromRecord(row: {
+    id: string;
+    <db_column_1>: <type>;
+    <db_column_2>: <type>;
+    // all DB columns — snake_case, matching the table exactly
+    created_at: Date;
+    updated_at: Date;
+    deleted_at: Date | null;
+  }): <Name>Entity {
+    return new <Name>Entity(
+      row.id,
+      row.<db_column_1>,
+      row.<db_column_2> as <EnumName>,  // cast string columns to enums where needed
+      // ...
+      row.created_at,
+      row.updated_at,
+      row.deleted_at,
     );
   }
 
   // --- Getters ---
-  get id(): number { return this._id; }
-  get name(): string { return this._name; }
-  get email(): string { return this._email; }
-  get status(): string { return this._status; }
+  get id(): string { return this._id; }
+  get <field1>(): <type> { return this._<field1>; }
+  get <field2>(): <type> { return this._<field2>; }
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get deletedAt(): Date | null { return this._deletedAt; }
 
   // --- Business Methods ---
-  activate(): void {
-    if (this._status === 'active') {
-      throw new Error('Account is already active');
-    }
-    this._status = 'active';
-  }
-
   get isDeleted(): boolean {
     return this._deletedAt !== null;
   }
@@ -91,9 +102,13 @@ export class SomeEntity {
 
 ## Rules
 
-- **Private constructor** — entities are only created via `create()`. No `new Entity()` outside the class.
-- **`create(props)` factory** — accepts a plain object with camelCase properties. The props shape is defined inline in the method signature — no external type import needed. The repository is responsible for mapping DB row (snake_case) to entity props (camelCase).
-- **Domain stays pure** — entities never import from `infrastructure/`, `shared/`, or `modules/`. The domain layer has zero outward dependencies.
+- **Only create what is needed** — only add factories, getters, business methods, value object properties, or any other code when a use case actually requires it. Never speculatively add methods, getters, or fields that no current use case consumes. Add them when the use case that needs them is being built.
+- **Private constructor** — entities are only created via `create()` or `fromRecord()`. No `new Entity()` outside the class.
+- **Two factories:**
+  - `static create(props)` — used by use cases to build a **new** entity before passing to the repo. Accepts only business-required fields (no timestamps, no deletedAt). Sets `createdAt`/`updatedAt` to `new Date()` and `deletedAt` to `null` internally.
+  - `static fromRecord(row)` — used by repositories to reconstruct an entity from a DB row. The `row` parameter type is defined **inline** (not imported from infrastructure). It matches the DB column shape (snake_case, nullable) so the repository can pass the raw row directly. TypeScript's structural typing ensures the repository's `<Entity>Row` matches the inline shape without an explicit import.
+- **Domain stays pure** — entities import **only** from `domain/enums/` and `domain/value-objects/`. Never from `infrastructure/`, `shared/`, or `modules/`. This is non-negotiable.
+- **`fromRecord` uses inline type** — the row shape is declared directly in the method signature. No imported row types from infrastructure. Cast string columns to their enum type using `as <EnumName>` where needed.
 - **Readonly getters** — all properties accessed via getters. External code never sets entity state directly.
 - **Business methods** — entity enforces its own invariants. Use cases call entity methods like `entity.activate()` or `entity.changeRole()`, never `entity.status = 'active'`.
 - **No HTTP awareness** — entities never know about requests, responses, status codes, or Express.

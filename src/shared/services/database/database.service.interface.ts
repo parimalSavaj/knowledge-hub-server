@@ -1,4 +1,4 @@
-import { QueryResultRow } from "pg";
+import { PoolClient, QueryResultRow } from "pg";
 
 export interface IDatabaseService {
   connect(): Promise<void>;
@@ -8,4 +8,5 @@ export interface IDatabaseService {
   insert<T extends QueryResultRow>(text: string, params?: unknown[]): Promise<T>;
   update(text: string, params?: unknown[]): Promise<number>;
   delete(text: string, params?: unknown[]): Promise<number>;
+  getClient(): Promise<PoolClient>;
 }

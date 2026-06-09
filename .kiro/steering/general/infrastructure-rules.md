@@ -27,7 +27,7 @@ src/infrastructure/
 
 ## Key Principles
 
-- Repositories return domain entities via a private `toEntity(row)` method that maps snake_case rows to `Entity.create(props)`.
+- Repositories return domain entities via a private `toEntity(row)` method that calls `Entity.fromRecord(row)`. The entity's `fromRecord` accepts an inline-typed row (snake_case) — TypeScript's structural typing matches `<Entity>Row` without the entity needing to import it.
 - Row types are plain `type` aliases matching DB columns exactly (snake_case).
 - Use cases depend on repository **interfaces** — never concrete classes.
 - Never pre-create methods speculatively — add only when a use case needs them.

@@ -19,11 +19,10 @@ src/shared/
 ├── core/            # HTTP primitives (ApiError, ApiResponse, ErrorHandler)
 ├── middlewares/     # Global middlewares (auth, validate, role)
 └── services/        # Shared services — one folder per service
-    ├── logger/      # Logger service (interface + implementation)
-    ├── database/    # Database service (interface + types + implementation)
-    ├── jwt/         # JWT service (interface + types + implementation)
-    ├── hash/        # Hash service (interface + implementation)
-    └── swagger/     # Swagger service (interface + config + schemas + implementation)
+    ├── logger/      # interface + implementation
+    ├── database/    # interface + types + implementation
+    ├── jwt/         # interface + types + implementation
+    └── ...          # hash/, id/, swagger/, etc.
 ```
 
 ## Key Principles

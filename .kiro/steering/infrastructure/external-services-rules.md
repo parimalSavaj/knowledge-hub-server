@@ -37,28 +37,19 @@ src/infrastructure/external-services/<name>/
 └── <name>.external-service.ts              # Implementation (HTTP calls)
 ```
 
-Example:
-```
-src/infrastructure/external-services/email/
-├── email.external-service.interface.ts
-├── email.types.ts
-└── email.external-service.ts
-```
-
 ## Types — `<name>.types.ts`
 
 Types specific to the external service — request payloads, response shapes, options.
 
 ```ts
-export type SendEmailParams = {
-  to: string;
-  subject: string;
-  html: string;
+export type <Action>Params = {
+  <field>: <type>;
+  <field>: <type>;
 };
 
-export type SendEmailResult = {
-  messageId: string;
-  accepted: boolean;
+export type <Action>Result = {
+  <field>: <type>;
+  <field>: <type>;
 };
 ```
 
@@ -73,10 +64,10 @@ Rules:
 Defines the contract so use cases are not coupled to the specific provider.
 
 ```ts
-import { SendEmailParams, SendEmailResult } from './email.types';
+import { <Action>Params, <Action>Result } from './<name>.types';
 
-export interface IEmailExternalService {
-  sendEmail(params: SendEmailParams): Promise<SendEmailResult>;
+export interface I<PascalName>ExternalService {
+  <methodName>(params: <Action>Params): Promise<<Action>Result>;
 }
 ```
 
@@ -91,18 +82,17 @@ Rules:
 The concrete class that makes HTTP calls to the third-party API.
 
 ```ts
-import { IEmailExternalService } from './email.external-service.interface';
-import { SendEmailParams, SendEmailResult } from './email.types';
+import { I<PascalName>ExternalService } from './<name>.external-service.interface';
+import { <Action>Params, <Action>Result } from './<name>.types';
 import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
 import { config } from '../../../shared/config';
 
-export class EmailExternalService implements IEmailExternalService {
+export class <PascalName>ExternalService implements I<PascalName>ExternalService {
   constructor(private readonly logger: ILoggerService) {}
 
-  async sendEmail(params: SendEmailParams): Promise<SendEmailResult> {
-    // HTTP call to email provider
-    this.logger.info('Sending email', { to: params.to, subject: params.subject });
-    // ... implementation
+  async <methodName>(params: <Action>Params): Promise<<Action>Result> {
+    this.logger.info('<Action description>', { /* context */ });
+    // ... HTTP call implementation
   }
 }
 ```
@@ -115,6 +105,7 @@ Rules:
 - Handles HTTP errors internally — throws domain-friendly errors, never leaks raw API errors to use cases.
 - Logs all external calls via `ILoggerService` for observability.
 - No business logic — only API communication and response mapping.
+- **Only create what is needed** — only add methods when a use case actually requires them. Never speculatively add service methods that no current code calls.
 
 ## Import Rules
 
@@ -122,7 +113,7 @@ Rules:
 <name>.external-service.ts imports:
   → ./<name>.external-service.interface   (co-located interface)
   → ./<name>.types                        (co-located types)
-  → shared/services/<name>/<name>.service.interface  (for ILoggerService)
+  → shared/services/logger/logger.service.interface  (for ILoggerService)
   → shared/config/                        (for API keys, URLs)
   → domain/enums/                         (if needed for mapping)
 
@@ -135,15 +126,9 @@ Rules:
 External services are instantiated in the module **factory** — same as repositories:
 
 ```ts
-// modules/auth/auth.factory.ts
-export class AuthFactory {
-  static create(db: IDatabaseService, logger: ILoggerService): AuthController {
-    const usersRepo = new UsersRepository(db);
-    const googleOAuth = new GoogleOAuthExternalService(logger);
-    const loginUseCase = new LoginUseCase(usersRepo, googleOAuth, logger);
-    return new AuthController(loginUseCase);
-  }
-}
+// Inside <name>.factory.ts
+const <serviceName> = new <PascalName>ExternalService(logger);
+const <useCaseName> = new <Action>UseCase(<repoName>, <serviceName>, logger);
 ```
 
 - Use cases receive external service interfaces via constructor — never the concrete class.

@@ -29,22 +29,22 @@ import { Router } from 'express';
 import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
 import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
 import { validate } from '../../../shared/middlewares/validate.middleware';
-import { AuthFactory } from '../auth.factory';
-import { registerSchema, loginSchema } from './auth.validation';
+import { <PascalName>Factory } from '../<name>.factory';
+import { <action1>Schema, <action2>Schema } from './<name>.validation';
 
-export class AuthRoutes {
+export class <PascalName>Routes {
   private readonly router: Router;
   private readonly controller;
 
   constructor(db: IDatabaseService, logger: ILoggerService) {
     this.router = Router();
-    this.controller = AuthFactory.create(db, logger);
+    this.controller = <PascalName>Factory.create(db, logger);
     this.setupRoutes();
   }
 
   private setupRoutes(): void {
-    this.router.post('/register', validate(registerSchema), this.controller.register);
-    this.router.post('/login', validate(loginSchema), this.controller.login);
+    this.router.post('/<endpoint1>', validate(<action1>Schema), this.controller.<action1>);
+    this.router.post('/<endpoint2>', validate(<action2>Schema), this.controller.<action2>);
   }
 
   getRouter(): Router {
@@ -70,39 +70,20 @@ Handles HTTP request/response. Extracts data into DTOs, calls use cases, returns
 import { Request, Response, NextFunction } from 'express';
 import { HTTP_STATUS } from '../../../shared/constants/status-code.constants';
 import { ApiResponse } from '../../../shared/core/api-response';
-import { RegisterUseCase } from '../application/register.use-case';
-import { LoginUseCase } from '../application/login.use-case';
-import { RegisterRequestDto } from '../application/dtos/register.dto';
-import { LoginRequestDto } from '../application/dtos/login.dto';
+import { <Action1>UseCase } from '../application/<action1>.use-case';
+import { <Action1>RequestDto } from '../application/dtos/<action1>.dto';
 
-export class AuthController {
+export class <PascalName>Controller {
   constructor(
-    private readonly registerUseCase: RegisterUseCase,
-    private readonly loginUseCase: LoginUseCase,
+    private readonly <action1>UseCase: <Action1>UseCase,
+    // ... other use cases
   ) {}
 
-  register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  <action1> = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const dto = new RegisterRequestDto({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password,
-      });
-      const result = await this.registerUseCase.execute(dto);
-      res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, result));
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    try {
-      const dto = new LoginRequestDto({
-        email: req.body.email,
-        password: req.body.password,
-      });
-      const result = await this.loginUseCase.execute(dto);
-      res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, result));
+      const dto = <Action1>RequestDto.fromRequest(req);
+      const result = await this.<action1>UseCase.execute(dto);
+      res.status(HTTP_STATUS.<STATUS>).json(new ApiResponse(HTTP_STATUS.<STATUS>, result));
     } catch (error) {
       next(error);
     }
@@ -114,11 +95,12 @@ Controller Rules:
 - Class name: `<PascalName>Controller` (e.g., `AuthController`, `UsersController`).
 - Constructor receives **only use case instances** — no db, no logger, no repos.
 - Each method is an arrow function (preserves `this` context for Express routing).
-- Each method: creates request DTO from `req` → calls `useCase.execute(dto)` → wraps in `ApiResponse` → sends response.
+- Each method: calls `RequestDto.fromRequest(req)` → calls `useCase.execute(dto)` → wraps in `ApiResponse` → sends response. The controller never manually extracts fields from `req.body` or `req.user` — that's the DTO's job.
 - Errors go to `next(error)` — never caught and handled inline.
 - Never throws errors directly — delegates all error creation to use cases.
-- No business logic — only request extraction and response formatting.
+- No business logic — only request delegation and response formatting.
 - Never imports repositories, external services, or domain entities directly.
+- **Only create what is needed** — only add controller methods and validation schemas when a use case and route actually require them. Never speculatively create endpoints or schemas that are not wired to a live route.
 
 ## Validation — `<name>.validation.ts`
 
@@ -127,18 +109,16 @@ Zod schemas for request validation. One schema per endpoint.
 ```ts
 import { z } from 'zod';
 
-export const registerSchema = z.object({
+export const <action1>Schema = z.object({
   body: z.object({
-    name: z.string().min(1).max(100),
-    email: z.string().email().max(255),
-    password: z.string().min(8).max(128),
+    <field1>: z.string().min(1).max(100),
+    <field2>: z.string().email().max(255),
   }),
 });
 
-export const loginSchema = z.object({
+export const <action2>Schema = z.object({
   body: z.object({
-    email: z.string().email(),
-    password: z.string().min(1),
+    <field1>: z.string().min(1),
   }),
 });
 ```
@@ -170,4 +150,3 @@ presentation/validation imports:
   → domain/enums/                        (for enum values in z.enum())
   → nothing else
 ```
-

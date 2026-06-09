@@ -2,9 +2,9 @@
 -- Created at: 2026-06-03T10:21:56.000Z
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-  id          SERIAL PRIMARY KEY,
-  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token       VARCHAR(512) NOT NULL UNIQUE,
+  id          UUID PRIMARY KEY,
+  user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token       TEXT NOT NULL UNIQUE,
   expires_at  TIMESTAMPTZ NOT NULL,
   revoked     BOOLEAN NOT NULL DEFAULT FALSE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()

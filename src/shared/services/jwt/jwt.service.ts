@@ -1,7 +1,8 @@
 import jwt, { JsonWebTokenError, TokenExpiredError, SignOptions } from "jsonwebtoken";
-import { config } from "../config";
-import { UnauthorizedError } from "../core/api-error";
-import { IJwtService } from "./interfaces/jwt.service.interface";
+import { config } from "../../config";
+import { UnauthorizedError } from "../../core/api-error";
+import { IJwtService } from "./jwt.service.interface";
+import {  AccessTokenInput, RefreshTokenInput } from "./jwt.types";
 
 export class JwtService implements IJwtService {
   private static instance: JwtService | null = null;
@@ -15,13 +16,13 @@ export class JwtService implements IJwtService {
     return JwtService.instance;
   }
 
-  signAccessToken(payload: object): string {
+  signAccessToken(payload: AccessTokenInput): string {
     return jwt.sign(payload, config.jwt.accessSecret, {
       expiresIn: config.jwt.accessExpiresIn as SignOptions["expiresIn"],
     });
   }
 
-  signRefreshToken(payload: object): string {
+  signRefreshToken(payload: RefreshTokenInput): string {
     return jwt.sign(payload, config.jwt.refreshSecret, {
       expiresIn: config.jwt.refreshExpiresIn as SignOptions["expiresIn"],
     });

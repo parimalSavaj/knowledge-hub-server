@@ -1,6 +1,6 @@
 import pino from "pino";
-import { config } from "../config";
-import { ILoggerService } from "./interfaces/logger.service.interface";
+import { config } from "../../config";
+import { ILoggerService } from "./logger.service.interface";
 
 export class LoggerService implements ILoggerService {
   private static instance: LoggerService | null = null;

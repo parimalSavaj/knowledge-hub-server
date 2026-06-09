@@ -30,37 +30,41 @@ Before creating a value object, confirm:
 Every value object follows this pattern:
 
 ```ts
-import { OrgRole } from '../enums/org-role.enum';
+import { <EnumName> } from '../enums/<enum-name>.enum';
 
-export class UserMembership {
+export class <Name> {
   private constructor(
-    private readonly _orgId: number,
-    private readonly _orgName: string,
-    private readonly _orgSlug: string,
-    private readonly _role: OrgRole,
+    private readonly _<field1>: <type>,
+    private readonly _<field2>: <type>,
+    private readonly _<field3>: <EnumName>,
+    // ... all properties as private readonly
   ) {}
 
-  static create(orgId: number, orgName: string, orgSlug: string, role: OrgRole): UserMembership {
-    return new UserMembership(orgId, orgName, orgSlug, role);
+  static create(props: {
+    <field1>: <type>;
+    <field2>: <type>;
+    <field3>: <EnumName>;
+  }): <Name> {
+    return new <Name>(props.<field1>, props.<field2>, props.<field3>);
   }
 
-  get orgId(): number { return this._orgId; }
-  get orgName(): string { return this._orgName; }
-  get orgSlug(): string { return this._orgSlug; }
-  get role(): OrgRole { return this._role; }
+  get <field1>(): <type> { return this._<field1>; }
+  get <field2>(): <type> { return this._<field2>; }
+  get <field3>(): <EnumName> { return this._<field3>; }
 
-  equals(other: UserMembership): boolean {
-    return this._orgId === other._orgId && this._role === other._role;
+  equals(other: <Name>): boolean {
+    return this._<field1> === other._<field1> && this._<field3> === other._<field3>;
   }
 }
 ```
 
 ## Rules
 
+- **Only create what is needed** — only add properties, getters, or methods when a use case actually requires them. Never speculatively add fields that no current code consumes. Add them when the use case that needs them is being built.
 - **No IDs** — value objects never have an `id` property. They are identified by their combined attributes.
 - **Private constructor** — created only via a static `create()` factory method.
 - **Immutable** — all properties are `private readonly`. No setters, no mutation methods.
-- **`equals()` method** — value objects define equality by comparing their attributes, not by reference.
+- **`equals()` method** — value objects define equality by comparing their attributes, not by reference. Compare the fields that define the identity of the value object.
 - **No database awareness** — value objects never know about raw DB rows. The entity's `fromRecord()` or the repository constructs them.
 - **Reusable across entities** — the same value object class can describe data inside different parent entities, but if the shape differs significantly by context, create separate value objects tailored to each parent.
 - **No business logic that mutates state** — value objects can have computed getters or validation in `create()`, but they never change after construction.
@@ -71,8 +75,14 @@ export class UserMembership {
 
 | Value Object | Used Inside | Description |
 |---|---|---|
-| `UserMembership` | `UserEntity` | Represents which org a user belongs to and their role (orgId, orgName, orgSlug, role) |
-| `OrgMember` | `OrganizationEntity` | Represents a member of an org (userId, userName, userEmail, role) |
+| `OrgMembership` | `OrgMembersRepository` | Write-side: carries the data needed to persist a new org membership row (id, userId, organizationId, role, timestamps) |
+
+The following value objects are planned but **not yet created** — they will be added when the use cases that need them are built:
+
+| Value Object | Will Live Inside | Description |
+|---|---|---|
+| `UserMembership` | `UserEntity` | Read-side: represents which org a user belongs to and their role (orgId, orgName, orgSlug, role) |
+| `OrgMember` | `OrganizationEntity` | Read-side: represents a member of an org (userId, userName, userEmail, role) |
 
 ## Why Two Value Objects Instead of One
 
@@ -88,22 +98,22 @@ One generic object would carry unnecessary data depending on the context. Two ta
 Value objects are loaded **optionally** by the repository. Not every use case needs them:
 
 - `findById(id)` → returns entity without value objects (fast).
-- `findByIdWithMemberships(id)` → returns entity with value objects loaded (JOIN query).
+- `findByIdWith<ValueObjects>(id)` → returns entity with value objects loaded (JOIN query).
 
 The entity must handle the case where value objects are not loaded:
 
 ```ts
 // Inside the entity
-private _memberships: UserMembership[] | null = null;
+private _<valueObjects>: <ValueObject>[] | null = null;
 
-get memberships(): UserMembership[] {
-  if (this._memberships === null) {
-    throw new Error('Memberships not loaded — use a repository method that loads them');
+get <valueObjects>(): <ValueObject>[] {
+  if (this._<valueObjects> === null) {
+    throw new Error('<ValueObjects> not loaded — use a repository method that loads them');
   }
-  return this._memberships;
+  return this._<valueObjects>;
 }
 
-get hasMembershipsLoaded(): boolean {
-  return this._memberships !== null;
+get has<ValueObjects>Loaded(): boolean {
+  return this._<valueObjects> !== null;
 }
 ```

@@ -1,7 +1,7 @@
 import { Pool, PoolClient, QueryResultRow } from "pg";
-import { config } from "../config";
-import { LoggerService } from "./logger.service";
-import { IDatabaseService } from "./interfaces/database.service.interface";
+import { config } from "../../config";
+import { LoggerService } from "../logger/logger.service";
+import { IDatabaseService } from "./database.service.interface";
 
 export class DatabaseService implements IDatabaseService {
   private static instance: DatabaseService | null = null;
@@ -84,6 +84,12 @@ export class DatabaseService implements IDatabaseService {
     this.ensureConnected();
     const result = await this.pool!.query(text, params);
     return result.rowCount ?? 0;
+  }
+
+  // Returns a raw PoolClient for transaction control in use cases
+  async getClient(): Promise<PoolClient> {
+    this.ensureConnected();
+    return this.pool!.connect();
   }
 
   private ensureConnected(): void {

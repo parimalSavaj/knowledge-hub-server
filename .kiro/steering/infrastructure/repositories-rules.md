@@ -22,14 +22,6 @@ src/infrastructure/repositories/<name>/
 └── <name>.repository.ts              # Implementation (raw SQL)
 ```
 
-Example:
-```
-src/infrastructure/repositories/users/
-├── users.repository.interface.ts
-├── users.types.ts
-└── users.repository.ts
-```
-
 ## Incremental Development Rule
 
 - Never pre-create repository methods speculatively. Only add a method when a use case actually needs it.
@@ -42,14 +34,11 @@ src/infrastructure/repositories/users/
 Raw DB row types represent exactly what PostgreSQL returns — snake_case column names, nullable fields matching the schema.
 
 ```ts
-export type UserRow = {
-  id: number;
-  name: string;
-  email: string;
-  password: string | null;
-  avatar_url: string | null;
-  auth_provider: string;
-  provider_id: string | null;
+export type <Entity>Row = {
+  id: string;
+  <db_column>: <type>;
+  <db_column>: <type> | null;
+  // ... all columns matching table schema exactly
   created_at: Date;
   updated_at: Date;
   deleted_at: Date | null;
@@ -68,76 +57,66 @@ Rules:
 Defines the contract that use cases depend on. Use cases never import the concrete repository.
 
 ```ts
-import { UserEntity } from '../../../domain/entities/user.entity';
+import { PoolClient } from 'pg';
+import { <Name>Entity } from '../../../domain/entities/<name>.entity';
 
-export interface IUsersRepository {
-  findById(id: number): Promise<UserEntity | null>;
-  findByEmail(email: string): Promise<UserEntity | null>;
-  create(data: { name: string; email: string; password: string }): Promise<UserEntity>;
+export interface I<PascalName>Repository {
+  findById(id: string, client?: PoolClient): Promise<<Name>Entity | null>;
+  findBy<Field>(<field>: <type>, client?: PoolClient): Promise<<Name>Entity | null>;
+  create(entity: <Name>Entity, client?: PoolClient): Promise<void>;
 }
 ```
 
 Rules:
 - Interface name: `I<PascalName>Repository` (e.g., `IUsersRepository`, `IOrganizationsRepository`).
-- Methods return domain entities — never raw row types. (Exception: tables with no entity like `refresh_tokens` return row types directly.)
+- Read methods return domain entities — never raw row types. (Exception: tables with no entity like `refresh_tokens` return row types directly.)
+- `create()` methods accept the **entity** and return `Promise<void>` — for tables that have a domain entity. The repo extracts the fields it needs from the entity's getters. For tables without an entity (like `refresh_tokens`, `org_members`), `create()` accepts a plain data object.
+- IDs are always `string` (UUID) — generated application-side via `IIdService` before the insert.
 - Method parameters are plain objects or primitives — never DTOs from `modules/`.
-- No `PoolClient` parameter — transaction control belongs in use cases.
-- Import only from `domain/entities/`, `domain/enums/`, `domain/value-objects/`.
+- Methods that participate in transactions accept an **optional** `PoolClient` parameter as the last argument. When provided, the method uses it instead of `this.db`. When omitted, the method uses `this.db` normally.
+- Import only from `domain/entities/`, `domain/enums/`, `domain/value-objects/`, and `PoolClient` type from `pg`.
 
 ## Implementation — `<name>.repository.ts`
 
-The concrete class with raw SQL queries. The repository is responsible for mapping DB rows (snake_case) to entity props (camelCase) via `Entity.create(props)`.
+The concrete class with raw SQL queries. The repository is responsible for calling `Entity.fromRecord(row)` to map DB rows to entities.
 
 ```ts
+import { PoolClient } from 'pg';
 import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
-import { UserEntity } from '../../../domain/entities/user.entity';
-import { AuthProvider } from '../../../domain/enums/auth-provider.enum';
-import { IUsersRepository } from './users.repository.interface';
-import { UserRow } from './users.types';
+import { <Name>Entity } from '../../../domain/entities/<name>.entity';
+import { I<PascalName>Repository } from './<name>.repository.interface';
+import { <Entity>Row } from './<name>.types';
 
-export class UsersRepository implements IUsersRepository {
-  private readonly TABLE = 'users';
+export class <PascalName>Repository implements I<PascalName>Repository {
+  private readonly TABLE = '<table_name>';
 
   constructor(private readonly db: IDatabaseService) {}
 
-  async findById(id: number): Promise<UserEntity | null> {
-    const row = await this.db.selectOne<UserRow>(
-      `SELECT * FROM ${this.TABLE} WHERE id = $1 AND deleted_at IS NULL`,
-      [id],
-    );
+  async findById(id: string, client?: PoolClient): Promise<<Name>Entity | null> {
+    const sql = `SELECT * FROM ${this.TABLE} WHERE id = $1 AND deleted_at IS NULL`;
+    const params = [id];
+
+    const row = client
+      ? (await client.query<<Entity>Row>(sql, params)).rows[0] ?? null
+      : await this.db.selectOne<<Entity>Row>(sql, params);
+
     return row ? this.toEntity(row) : null;
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
-    const row = await this.db.selectOne<UserRow>(
-      `SELECT * FROM ${this.TABLE} WHERE email = $1 AND deleted_at IS NULL`,
-      [email],
-    );
-    return row ? this.toEntity(row) : null;
+  async create(entity: <Name>Entity, client?: PoolClient): Promise<void> {
+    const sql = `INSERT INTO ${this.TABLE} (<columns>) VALUES ($1, $2, ...)`;
+    const params = [entity.<getter1>, entity.<getter2>, ...];
+
+    if (client) {
+      await client.query(sql, params);
+    } else {
+      await this.db.insert(sql, params);
+    }
   }
 
-  async create(data: { name: string; email: string; password: string }): Promise<UserEntity> {
-    const row = await this.db.insert<UserRow>(
-      `INSERT INTO ${this.TABLE} (name, email, password) VALUES ($1, $2, $3) RETURNING *`,
-      [data.name, data.email, data.password],
-    );
-    return this.toEntity(row);
-  }
-
-  // --- Private mapper: DB row (snake_case) → Entity props (camelCase) ---
-  private toEntity(row: UserRow): UserEntity {
-    return UserEntity.create({
-      id: row.id,
-      name: row.name,
-      email: row.email,
-      password: row.password,
-      avatarUrl: row.avatar_url,
-      authProvider: row.auth_provider as AuthProvider,
-      providerId: row.provider_id,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      deletedAt: row.deleted_at,
-    });
+  // --- Private mapper: DB row → Entity (via fromRecord) ---
+  private toEntity(row: <Entity>Row): <Name>Entity {
+    return <Name>Entity.fromRecord(row);
   }
 }
 ```
@@ -148,22 +127,25 @@ Rules:
 - Has `private readonly TABLE = '<table_name>'` — used in all SQL strings.
 - Has `constructor(private readonly db: IDatabaseService)` — receives the database service.
 - **Only `IDatabaseService` is injected** — no other shared services (`IHashService`, `IJwtService`, `ILoggerService`, etc.) are allowed. Business-logic services belong in use cases, not repositories.
+- Methods accept an **optional `PoolClient`** as the last parameter for transaction support. When provided, the method uses `client.query()` instead of `this.db`. When omitted, uses `this.db` normally.
 - All queries filter `WHERE deleted_at IS NULL` for soft-deleted tables — this is the repository's responsibility, never the use case's.
-- Returns domain entities via a private `toEntity(row)` method that maps row (snake_case) to `Entity.create(props)` (camelCase) — never returns raw rows to the use case. (Exception: tables with no entity return row types directly.)
+- Returns domain entities via a private `toEntity(row)` method that calls `Entity.fromRecord(row)` — never returns raw rows to the use case. (Exception: tables with no entity return row types directly.)
 - Every repository with a domain entity must have a `private toEntity(row: <Row>): <Entity>` method — this is the single place for row-to-entity mapping.
 - Uses parameterized queries (`$1`, `$2`, ...) — never string interpolation for values.
 - No business logic — only data access and entity mapping. Data arrives already prepared (e.g., passwords are already hashed by the use case before reaching the repository).
-- Never accepts a `PoolClient` parameter — transaction control belongs in use cases per transaction rules.
+- **Always persist timestamps from the entity** — `create()` methods must include `created_at` and `updated_at` from `entity.createdAt` and `entity.updatedAt`. The entity is the source of truth for timestamps, not the DB's `DEFAULT NOW()`. This ensures the in-memory entity and the stored row are always consistent.
+- Never begins or commits a transaction — that's the use case's job. Repos only execute queries.
+- **Only create what is needed** — only add repository methods when a use case actually requires them. Never speculatively add `findById`, `findAll`, `update`, `delete`, or any other methods that no current use case calls.
 
 ## Import Rules
 
 ```
 <name>.repository.ts imports:
-  → ./name.repository.interface     (co-located interface)
-  → ./name.types                    (co-located row type)
-  → domain/entities/                (for Entity.create() call)
-  → domain/enums/                   (for enum casting in toEntity mapping)
-  → shared/services/<name>/<name>.service.interface  (for IDatabaseService)
+  → ./<name>.repository.interface     (co-located interface)
+  → ./<name>.types                    (co-located row type)
+  → domain/entities/                  (for Entity.fromRecord() call)
+  → domain/enums/                     (for enum casting if needed)
+  → shared/services/database/database.service.interface  (for IDatabaseService)
 
 <name>.repository.interface.ts imports:
   → domain/entities/                (return types)
@@ -179,12 +161,11 @@ Some tables (like `refresh_tokens`) are infrastructure/security concerns — the
 - Use cases work with the row type from the co-located `types` file.
 
 ```ts
-// refresh-tokens.repository.interface.ts
-import { RefreshTokenRow } from './refresh-tokens.types';
+import { <Name>Row } from './<name>.types';
 
-export interface IRefreshTokensRepository {
-  findByToken(token: string): Promise<RefreshTokenRow | null>;
-  create(data: { userId: number; token: string; expiresAt: Date }): Promise<RefreshTokenRow>;
-  revoke(id: number): Promise<void>;
+export interface I<PascalName>Repository {
+  findByToken(token: string): Promise<<Name>Row | null>;
+  create(data: { id: string; userId: string; token: string; expiresAt: Date }): Promise<void>;
+  revoke(id: string): Promise<void>;
 }
 ```

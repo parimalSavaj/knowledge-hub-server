@@ -47,12 +47,13 @@ This generates a timestamped file in `migrations/` with a blank template.
 
 - Each migration file must be **idempotent** where possible — use `IF NOT EXISTS`, `IF EXISTS`, `ON CONFLICT DO NOTHING`.
 - Each migration runs inside a transaction — if it fails, it rolls back automatically.
-- Never modify an existing migration file that has already been applied.
+- **Pre-deployment:** Migration files can be freely edited while the project has not been deployed to any environment. Once deployed, migrations become append-only — never edit or delete an applied migration.
 - One concern per migration — don't combine unrelated schema changes in one file.
 - Always include `RETURNING` in INSERT statements when the result is needed.
 
 ## Column Type Standards
 
+- Always use `UUID` (native PostgreSQL type) for all `id` (primary key) and foreign key columns — IDs are UUIDs generated application-side via `IIdService`, never database-generated sequences. The `UUID` type is stored as 16 bytes (more efficient than `VARCHAR(36)`) and validates format automatically.
 - Always use `TIMESTAMPTZ` (not `TIMESTAMP`) for all timestamp columns.
 - Use `TEXT` instead of `VARCHAR(n)` for variable-length strings with no meaningful upper bound (e.g. tokens, URLs, descriptions). Use `VARCHAR(n)` only when the length limit is a real business constraint (e.g. `name VARCHAR(100)`).
 
@@ -102,25 +103,31 @@ CREATE INDEX IF NOT EXISTS idx_refresh_tokens_active ON refresh_tokens (expires_
 ## Example Migration
 
 ```sql
--- Migration: create-users-table
--- Created at: 2026-06-01T12:00:00.000Z
+-- Migration: <description>
+-- Created at: <ISO timestamp>
 
-CREATE TABLE IF NOT EXISTS users (
-  id          SERIAL PRIMARY KEY,
-  name        VARCHAR(100) NOT NULL,
-  email       VARCHAR(255) NOT NULL,
-  password    VARCHAR(255) NOT NULL,
-  role        VARCHAR(50) NOT NULL DEFAULT 'user'
-                CONSTRAINT users_role_check
-                CHECK (role IN ('user', 'admin')),
+CREATE TABLE IF NOT EXISTS <table_name> (
+  id          UUID PRIMARY KEY,
+  <column>    VARCHAR(<n>) NOT NULL,
+  <column>    VARCHAR(<n>) NOT NULL,
+  <column>    VARCHAR(<n>) NULL,
+  <enum_col>  VARCHAR(50) NOT NULL DEFAULT '<default_value>'
+                CONSTRAINT <table>_<column>_check
+                CHECK (<enum_col> IN ('<value1>', '<value2>', '<value3>')),
+  <fk_col>    UUID NOT NULL REFERENCES <parent_table>(id),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at  TIMESTAMPTZ NULL
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_active
-  ON users (email)
+-- Partial unique index (for soft-deleted tables)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_<table>_<column>_active
+  ON <table_name> (<column>)
   WHERE deleted_at IS NULL;
+
+-- Foreign key index
+CREATE INDEX IF NOT EXISTS idx_<table>_<fk_col>
+  ON <table_name> (<fk_col>);
 ```
 
 ## Running Migrations
@@ -146,7 +153,7 @@ npm run db:seed
 
 - Never write raw SQL schema changes directly in the DB — always use a migration file.
 - Never run `db:seed` in production.
-- Migration files are append-only — never edit or delete an applied migration.
+- **Pre-deployment:** Migration files can be edited directly. Once deployed to any environment, migrations are append-only — never edit or delete an applied migration.
 - Every business table must have `created_at`, `updated_at`, and `deleted_at` columns using `TIMESTAMPTZ`.
 - Foreign key constraints must be defined in the same migration as the dependent table.
 - Foreign key columns must have an index in the same migration.

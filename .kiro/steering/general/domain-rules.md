@@ -21,9 +21,9 @@ src/domain/
 
 ## Key Principles
 
-- Zero imports from any outer layer — domain is the innermost layer.
-- Entities use `static create(props)` factory — props are camelCase, defined inline. No infrastructure imports.
-- Repository does the mapping from DB row (snake_case) → entity props (camelCase).
+- Zero imports from any outer layer — domain is the innermost layer. Entities import only from `domain/enums/` and `domain/value-objects/`.
+- Entities have two factories: `static create(props)` for new entities (camelCase props, inline type) and `static fromRecord(row)` for reconstruction from DB rows (snake_case props, inline type). Both parameter types are defined inline — no imported row types from infrastructure.
+- Repository calls `Entity.fromRecord(row)` — TypeScript's structural typing ensures the repository's `<Entity>Row` matches the entity's inline row shape without an explicit import.
 - Value objects are immutable, no ID, replaceable.
 - Enums are string-valued, UPPER_SNAKE_CASE keys, lowercase values matching DB.
 

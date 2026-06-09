@@ -35,8 +35,8 @@ export class NotFoundError extends ApiError {
 }
 
 export class ValidationError extends ApiError {
-  constructor(message: string = "Validation failed") {
-    super(HTTP_STATUS.BAD_REQUEST, message);
+  constructor(message: string = "Validation failed", errors: string[] = []) {
+    super(HTTP_STATUS.BAD_REQUEST, message, errors);
   }
 }
 

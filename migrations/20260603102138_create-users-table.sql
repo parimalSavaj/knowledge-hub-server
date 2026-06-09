@@ -2,7 +2,7 @@
 -- Created at: 2026-06-03T10:21:38.000Z
 
 CREATE TABLE IF NOT EXISTS users (
-  id              SERIAL PRIMARY KEY,
+  id              UUID PRIMARY KEY,
   name            VARCHAR(100) NOT NULL,
   email           VARCHAR(255) NOT NULL,
   password        VARCHAR(255) NULL,
