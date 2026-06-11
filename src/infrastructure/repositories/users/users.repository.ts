@@ -17,7 +17,7 @@ export class UsersRepository implements IUsersRepository {
       ? (await client.query<UserRow>(sql, params)).rows[0] ?? null
       : await this.db.selectOne<UserRow>(sql, params);
 
-    return row ? UserEntity.fromRecord(row) : null;
+    return row ? this.toEntity(row) : null;
   }
 
   async create(entity: UserEntity, client?: PoolClient): Promise<void> {
@@ -40,5 +40,10 @@ export class UsersRepository implements IUsersRepository {
     } else {
       await this.db.insert(sql, params);
     }
+  }
+
+  // --- Private mapper: DB row → Entity (via fromRecord) ---
+  private toEntity(row: UserRow): UserEntity {
+    return UserEntity.fromRecord(row);
   }
 }

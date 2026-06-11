@@ -134,9 +134,8 @@ export class UserEntity {
    * Assigns this user to an organization with a given role.
    * Directly instantiates OrgMembership — no intermediate factory call.
    */
-  joinOrganization(props: { id: string; organizationId: string; role: OrgRole }): void {
+  joinOrganization(props: { organizationId: string; role: OrgRole }): void {
     this._membership = OrgMembership.create({
-      id: props.id,
       userId: this._id,
       organizationId: props.organizationId,
       role: props.role,

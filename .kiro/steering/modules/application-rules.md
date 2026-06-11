@@ -221,16 +221,25 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
     await this.<relationRepo>.create({ id, ...data }, client);
 
     await client.query('COMMIT');
+    this.logger.info('<Action> completed successfully', { entityAId: entityA.id });
   } catch (error) {
     await client.query('ROLLBACK');
-    throw error;
+    this.logger.error('<Action> transaction failed', error, { /* context */ });
+    throw new InternalError('<User-friendly message> — please try again');
   } finally {
     client.release();
   }
 
-  return new <Action>ResponseDto({ ... });
+  return <Action>ResponseDto.fromEntities(entityA);
 }
 ```
+
+### Transaction Error Handling
+
+- Always **log the original error** with `this.logger.error(...)` before throwing — this ensures the real DB error (constraint violations, connection issues, etc.) is captured in server logs for debugging.
+- Always **throw `InternalError` with a user-friendly message** — never re-throw the raw error. Raw DB errors may expose table names, column names, or internal details that should not reach the client.
+- The combination of logging + wrapping gives you: **debuggability in logs** (the real error with full stack trace) + **safety in responses** (a generic message for the client).
+- To debug a transaction failure: check your server logs for the `error`-level entry with the context (userId, email, etc.) — the original error object and its stack trace will be there.
 
 ### Transaction Rules
 
@@ -239,7 +248,7 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
 - Repository methods accept an **optional** `PoolClient` parameter. When provided, the repo uses it instead of `this.db`.
 - `IDatabaseService` is injected into the use case via the factory when transactions are needed.
 - Always release the client in a `finally` block — never skip this.
-- Always rollback in the `catch` block before re-throwing the error.
+- Always rollback in the `catch` block. Log the original error with context, then throw `InternalError` with a user-friendly message — never re-throw raw DB errors to the client.
 - Never begin or commit a transaction inside a repository method.
 - Only `BEGIN`, `COMMIT`, and `ROLLBACK` are called directly via `client.query()` in the use case — all data operations go through repo methods.
 

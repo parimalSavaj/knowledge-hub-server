@@ -154,7 +154,10 @@ npm run db:seed
 - Never write raw SQL schema changes directly in the DB — always use a migration file.
 - Never run `db:seed` in production.
 - **Pre-deployment:** Migration files can be edited directly. Once deployed to any environment, migrations are append-only — never edit or delete an applied migration.
-- Every business table must have `created_at`, `updated_at`, and `deleted_at` columns using `TIMESTAMPTZ`.
+- Add timestamp columns based on the table's actual needs. Not every table requires all three:
+  - `created_at` — add when "when was this record created" is meaningful. Use a domain-specific name when it communicates better (e.g., `joined_at` for membership tables).
+  - `updated_at` — add when rows are mutable (role changes, profile updates). Skip for rows that never change after creation.
+  - `deleted_at` — add when the table needs soft delete. Skip when hard delete or CASCADE is the correct behavior for that table.
 - Foreign key constraints must be defined in the same migration as the dependent table.
 - Foreign key columns must have an index in the same migration.
 - Columns with a fixed set of valid values must have a `CHECK` constraint.

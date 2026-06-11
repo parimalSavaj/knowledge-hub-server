@@ -50,7 +50,6 @@ export class RegisterUseCase {
 
     // Membership VO is created inside the entity — use case never touches OrgMembership directly
     userEntity.joinOrganization({
-      id: this.idService.generate(),
       organizationId: orgEntity.id,
       role: OrgRole.OWNER,
     });

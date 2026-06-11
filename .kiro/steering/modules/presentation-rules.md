@@ -28,9 +28,9 @@ Registers all endpoints for the module. Calls the factory once to get the contro
 import { Router } from 'express';
 import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
 import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
-import { validate } from '../../../shared/middlewares/validate.middleware';
+import { ValidationMiddleware } from '../../../shared/middlewares/validate.middleware';
 import { <PascalName>Factory } from '../<name>.factory';
-import { <action1>Schema, <action2>Schema } from './<name>.validation';
+import { <action1>BodySchema, <action2>BodySchema } from './<name>.validation';
 
 export class <PascalName>Routes {
   private readonly router: Router;
@@ -43,8 +43,8 @@ export class <PascalName>Routes {
   }
 
   private setupRoutes(): void {
-    this.router.post('/<endpoint1>', validate(<action1>Schema), this.controller.<action1>);
-    this.router.post('/<endpoint2>', validate(<action2>Schema), this.controller.<action2>);
+    this.router.post('/<endpoint1>', ValidationMiddleware.validateBody(<action1>BodySchema), this.controller.<action1>);
+    this.router.post('/<endpoint2>', ValidationMiddleware.validateBody(<action2>BodySchema), this.controller.<action2>);
   }
 
   getRouter(): Router {
@@ -104,27 +104,32 @@ Controller Rules:
 
 ## Validation — `<name>.validation.ts`
 
-Zod schemas for request validation. One schema per endpoint.
+Zod schemas for request validation. One schema per endpoint, per request part (body, params, query).
 
 ```ts
 import { z } from 'zod';
 
-export const <action1>Schema = z.object({
-  body: z.object({
-    <field1>: z.string().min(1).max(100),
-    <field2>: z.string().email().max(255),
-  }),
+// Body schema — validates req.body directly
+export const <action1>BodySchema = z.object({
+  <field1>: z.string().min(1).max(100),
+  <field2>: z.string().email().max(255),
 });
 
-export const <action2>Schema = z.object({
-  body: z.object({
-    <field1>: z.string().min(1),
-  }),
+// Params schema — validates req.params directly
+export const <action2>ParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+// Query schema — validates req.query directly
+export const <action3>QuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
 ```
 
 Validation Rules:
-- One exported schema per endpoint — named `<action>Schema` or `<action><Entity>Schema`.
+- One exported schema per endpoint per request part — named `<action>BodySchema`, `<action>ParamsSchema`, or `<action>QuerySchema`.
+- Schemas validate their specific request part directly (body fields, param fields, query fields) — no nested `{ body: ... }` wrapper.
 - Validates shape and types only — no business rules (e.g., "email must be unique" is a use case concern, not validation).
 - Use `z.coerce.number()` for query/path params that come as strings.
 - Use `z.enum([...])` with explicit string values — never `z.nativeEnum()`.

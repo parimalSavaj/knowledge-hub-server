@@ -10,16 +10,14 @@ export class OrgMembersRepository implements IOrgMembersRepository {
 
   async create(membership: OrgMembership, client?: PoolClient): Promise<void> {
     const sql = `
-      INSERT INTO ${this.TABLE} (id, user_id, organization_id, role, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO ${this.TABLE} (user_id, organization_id, role, joined_at)
+      VALUES ($1, $2, $3, $4)
     `;
     const params = [
-      membership.id,
       membership.userId,
       membership.organizationId,
       membership.role,
-      membership.createdAt,
-      membership.updatedAt,
+      membership.joinedAt,
     ];
 
     if (client) {
