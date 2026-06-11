@@ -40,3 +40,4 @@ Loaded via `fileMatch` when editing files in these folders:
 - `.kiro/steering/shared/config-rules.md`
 - `.kiro/steering/shared/middlewares-rules.md`
 - `.kiro/steering/shared/types-rules.md`
+- `.kiro/steering/shared/swagger-rules.md`
