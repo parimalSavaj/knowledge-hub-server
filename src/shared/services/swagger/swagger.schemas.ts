@@ -1,25 +1,10 @@
+import { featureSchemas } from "./schemas";
+
 /**
- * Shared OpenAPI component schemas.
- * Add new schemas here as the API grows.
+ * Shared OpenAPI component schemas (used across all features).
+ * Feature-specific schemas live in schemas/<feature>.schemas.ts
  */
-export const swaggerSchemas: Record<string, Record<string, unknown>> = {
-  RegisterRequest: {
-    type: "object",
-    required: ["name", "email", "password"],
-    properties: {
-      name: { type: "string", example: "Jane Doe" },
-      email: { type: "string", format: "email", example: "jane@example.com" },
-      password: { type: "string", format: "password", minLength: 8, example: "Secret123!" },
-    },
-  },
-  RegisterResponse: {
-    type: "object",
-    properties: {
-      userId: { type: "string", example: "usr_01jwxyz" },
-      name: { type: "string", example: "Jane Doe" },
-      email: { type: "string", example: "jane@example.com" },
-    },
-  },
+const sharedSchemas: Record<string, Record<string, unknown>> = {
   ApiResponse: {
     type: "object",
     properties: {
@@ -43,4 +28,9 @@ export const swaggerSchemas: Record<string, Record<string, unknown>> = {
       data: { nullable: true, example: null },
     },
   },
+};
+
+export const swaggerSchemas: Record<string, Record<string, unknown>> = {
+  ...sharedSchemas,
+  ...featureSchemas,
 };

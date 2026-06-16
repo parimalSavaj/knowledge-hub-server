@@ -17,7 +17,10 @@ src/shared/services/swagger/
 ├── docs/                          # Path definitions — one file per feature module
 │   ├── <feature>.docs.ts          # Endpoint paths for that module
 │   └── index.ts                   # Merges all feature docs into swaggerPaths
-├── swagger.schemas.ts             # Shared component schemas (request/response shapes)
+├── schemas/                       # Request/response schemas — one file per feature module
+│   ├── <feature>.schemas.ts       # Request + response schemas for that module
+│   └── index.ts                   # Merges all feature schemas into featureSchemas
+├── swagger.schemas.ts             # Shared schemas (ApiResponse, ApiError) + merges feature schemas
 ├── swagger.config.ts              # OpenAPI config — references swaggerPaths + swaggerSchemas
 ├── swagger.service.interface.ts   # ISwaggerService interface
 └── swagger.service.ts             # Singleton service (calls swagger-jsdoc)
@@ -106,12 +109,12 @@ export const swaggerPaths: Record<string, Record<string, unknown>> = {
 - Every new feature docs file must be imported and spread here.
 - Order: system modules first (health), then feature modules alphabetically.
 
-## Schemas — `swagger.schemas.ts`
+## Schemas — `schemas/<feature>.schemas.ts`
 
-Defines all request/response shapes as OpenAPI component schemas.
+Feature-specific request/response schemas live in per-module files inside `schemas/`.
 
 ```ts
-export const swaggerSchemas: Record<string, Record<string, unknown>> = {
+export const <feature>Schemas: Record<string, Record<string, unknown>> = {
   <ActionRequest>: {
     type: "object",
     required: ["<field1>", "<field2>"],
@@ -127,6 +130,43 @@ export const swaggerSchemas: Record<string, Record<string, unknown>> = {
       <field2>: { type: "<type>", example: "<example>" },
     },
   },
+};
+```
+
+### Schemas File Rules
+
+- File naming: `<feature>.schemas.ts` (e.g., `auth.schemas.ts`, `users.schemas.ts`).
+- Export name: `<feature>Schemas` (e.g., `authSchemas`, `usersSchemas`).
+- One file per feature module — all request/response schemas for that module live in the same file.
+- Every new feature schemas file must be imported and spread in `schemas/index.ts`.
+
+## Schemas Index — `schemas/index.ts`
+
+Merges all feature schema files into a single `featureSchemas` export.
+
+```ts
+import { authSchemas } from "./auth.schemas";
+
+export const featureSchemas: Record<string, Record<string, unknown>> = {
+  ...authSchemas,
+};
+```
+
+## Shared Schemas — `swagger.schemas.ts`
+
+Contains only shared/global schemas (`ApiResponse`, `ApiError`) that are used across all features. Merges feature schemas from `schemas/index.ts`.
+
+```ts
+import { featureSchemas } from "./schemas";
+
+const sharedSchemas: Record<string, Record<string, unknown>> = {
+  ApiResponse: { ... },
+  ApiError: { ... },
+};
+
+export const swaggerSchemas: Record<string, Record<string, unknown>> = {
+  ...sharedSchemas,
+  ...featureSchemas,
 };
 ```
 
@@ -146,12 +186,12 @@ export const swaggerSchemas: Record<string, Record<string, unknown>> = {
 **Every time an API endpoint is created or modified, the Swagger documentation MUST be updated in the same change:**
 
 1. **New API endpoint** →
-   - Add request + response schemas to `swagger.schemas.ts`.
+   - Add request + response schemas to `schemas/<feature>.schemas.ts`.
    - Add path definition to `docs/<feature>.docs.ts`.
-   - If it's a new module, create the docs file and register it in `docs/index.ts`.
+   - If it's a new module, create both the schemas file and docs file, and register them in their respective `index.ts`.
 
 2. **Modified request/response shape** →
-   - Update the corresponding schema in `swagger.schemas.ts` to match the new DTO fields.
+   - Update the corresponding schema in `schemas/<feature>.schemas.ts` to match the new DTO fields.
    - Update the path definition if status codes or descriptions changed.
 
 3. **Deleted API endpoint** →
@@ -170,6 +210,12 @@ export const swaggerSchemas: Record<string, Record<string, unknown>> = {
 ## Import Rules
 
 ```
+schemas/<feature>.schemas.ts imports:
+  → nothing (pure data objects)
+
+schemas/index.ts imports:
+  → ./each feature schemas file
+
 docs/<feature>.docs.ts imports:
   → nothing (pure data objects with $ref strings)
 
@@ -177,7 +223,7 @@ docs/index.ts imports:
   → ./each feature docs file
 
 swagger.schemas.ts imports:
-  → nothing (pure data objects)
+  → ./schemas/index              (featureSchemas)
 
 swagger.config.ts imports:
   → ./docs/index               (swaggerPaths)

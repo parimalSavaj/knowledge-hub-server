@@ -263,8 +263,87 @@ findById(id: string, client?: PoolClient): Promise<<Name>Entity | null>;
 create(data: { id: string; <field>: <type>; ... }, client?: PoolClient): Promise<void>;
 ```
 
+### Transaction Decision Rule
+
+A transaction is required when the use case has an **atomicity requirement** — multiple state changes that form a single logical unit of work, where partial completion would leave the system in an inconsistent state.
+
+**Decision criteria — ask these questions:**
+
+1. **Consistency:** If one write succeeds but another fails, would the system be left in a broken or inconsistent state?
+   - Yes → Transaction required.
+   - No → No transaction needed.
+
+2. **Rollback necessity:** If the operation fails halfway, do previously written changes need to be undone?
+   - Yes → Transaction required.
+   - No → No transaction needed.
+
+3. **Business invariant:** Does the use case enforce a business rule that spans multiple tables/records (e.g., "a user must always have an organization")?
+   - Yes → Transaction required.
+   - No → No transaction needed.
+
+**If none of the above apply, the use case does not need a transaction — even if it performs multiple operations.** Independent writes that don't affect each other's correctness can run outside a transaction.
+
+**Examples:**
+
+| Use Case | Why transaction? | Decision |
+|---|---|---|
+| `RegisterUseCase` | User, org, and membership must all exist together — a user without an org violates a business invariant | Transaction required |
+| `LoginUseCase` | Stores a refresh token — if it fails, no other data was modified, system stays consistent | No transaction |
+| `TransferFundsUseCase` | Debit from account A and credit to account B — partial completion means money is lost or duplicated | Transaction required |
+| `UpdateProfileUseCase` | Updates a single user row — one atomic write, no cross-table consistency concern | No transaction |
+| `LogActivityUseCase` | Inserts an audit log — failure doesn't corrupt any business data | No transaction |
+
 ### When to Use Transactions
 
-- Use a transaction when 2+ write operations must succeed or fail together.
-- Single-operation use cases call the repository directly without a client — no transaction needed.
+- Use a transaction when multiple writes must succeed or fail **as a unit** to maintain data consistency.
+- Use a transaction when a **business invariant** spans multiple tables and partial writes would violate it.
+- Do NOT use a transaction for independent writes where one failing doesn't invalidate the other.
+- Do NOT use a transaction for single writes — they are atomic by nature.
 - Read-only use cases never need transactions.
+
+## Error Handling in Non-Transaction Use Cases
+
+Use cases that don't need a transaction still need intentional error handling for operations that can fail unexpectedly (DB writes, external service calls).
+
+### Pattern
+
+```ts
+async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
+  // 1. Business logic, validation, checks — throw named errors (UnauthorizedError, NotFoundError, etc.)
+
+  // 2. Operations that can fail unexpectedly — wrap in try/catch
+  try {
+    await this.<repo>.create({ ... });
+  } catch (error) {
+    this.logger.error('<Operation> failed', error, { /* context: userId, email, etc. */ });
+    throw new InternalError('<User-friendly message> — please try again');
+  }
+
+  // 3. Return response DTO
+}
+```
+
+### Rules
+
+- **Intentional business errors** (user not found, wrong password, duplicate email) → throw named `ApiError` subclasses directly. No try/catch needed — the global error handler formats them correctly.
+- **Unexpected infrastructure failures** (DB write fails, external API times out) → wrap in try/catch, log the real error with context, throw `InternalError` with a user-friendly message.
+- **Same error message for security-sensitive failures** — when a use case involves authentication, use the same generic message for different failure reasons to prevent information leakage (e.g., "Invalid email or password" for both missing user and wrong password).
+- **Log before throwing** — the try/catch logs the original error with business context (userId, email). The `InternalError` thrown to the client is safe and generic.
+- **Never let raw errors reach the client** — even though the global error handler catches unknown errors, wrapping known failure points gives you better logs with business context that the generic handler doesn't have.
+
+### What to Wrap vs What to Throw Directly
+
+| Operation type | Handling |
+|---|---|
+| Business rule check fails (not found, unauthorized, conflict) | Throw named error directly — no try/catch |
+| Single DB write (insert, update, delete) | Wrap in try/catch → log + throw `InternalError` |
+| External service call (API, email, notification) | Wrap in try/catch → log + throw `InternalError` |
+| Pure computation (hash, sign token, generate ID) | No try/catch — if these fail, something is fundamentally broken, let it bubble to global handler |
+| DB reads (find, select) | No try/catch — if reads fail, the use case can't proceed anyway, let it bubble to global handler |
+
+### Why Not Wrap Everything
+
+- Wrapping every line in try/catch makes code unreadable and hides the actual business flow.
+- The global error handler already catches anything unhandled — the system is safe by default.
+- Targeted try/catch adds value only when you need **specific business context in logs** that the global handler doesn't have.
+- DB reads failing is rare and unrecoverable — there's no meaningful recovery action or alternative message to give the user.

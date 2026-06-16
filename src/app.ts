@@ -66,6 +66,7 @@ export class App {
       this.logger,
       this.hashService,
       this.idService,
+      this.jwtService,
     );
   }
 
