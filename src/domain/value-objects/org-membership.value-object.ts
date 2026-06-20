@@ -1,9 +1,9 @@
 import { OrgRole } from '../enums/org-role.enum';
 
 /**
- * Represents the membership of a user in an organization — their role within it.
+ * Represents the membership of a user in an organization - their role within it.
  * Value object: no ID, immutable, defined by userId + organizationId + role.
- * Private constructor — only UserEntity.joinOrganization() is authorised to create this.
+ * Private constructor - only UserEntity.joinOrganization() is authorised to create this.
  */
 export class OrgMembership {
   private constructor(
@@ -17,7 +17,7 @@ export class OrgMembership {
 
   // --- Invariant Validation ---
   private validate(): void {
-    // No cross-field invariants yet — add domain rules here when needed
+    // No cross-field invariants yet - add domain rules here when needed
   }
 
   static create(props: {

@@ -103,4 +103,56 @@ export const authDocs: Record<string, Record<string, unknown>> = {
       },
     },
   },
+  "/auth/refresh": {
+    post: {
+      tags: ["Auth"],
+      summary: "Refresh access token",
+      description:
+        "Exchanges a valid refresh token for a new access token and a rotated refresh token. The old refresh token is revoked.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/RefreshRequest" },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Token refreshed successfully",
+          content: {
+            "application/json": {
+              schema: {
+                allOf: [
+                  { $ref: "#/components/schemas/ApiResponse" },
+                  {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/RefreshResponse" },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        400: {
+          description: "Validation error",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApiError" },
+            },
+          },
+        },
+        401: {
+          description: "Invalid or expired refresh token",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApiError" },
+            },
+          },
+        },
+      },
+    },
+  },
 };

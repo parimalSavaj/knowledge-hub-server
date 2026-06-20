@@ -12,7 +12,7 @@ export class OrganizationEntity {
 
   // --- Invariant Validation ---
   private validate(): void {
-    // No cross-field invariants yet — add domain rules here when needed
+    // No cross-field invariants yet - add domain rules here when needed
   }
 
   // --- Slug Generation ---

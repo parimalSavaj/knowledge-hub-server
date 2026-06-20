@@ -14,7 +14,7 @@ export const swaggerOptions: OAS3Options = {
     info: {
       title: "Knowledge Hub API",
       version: "1.0.0",
-      description: "Multi-tenant AI Knowledge Hub — API documentation",
+      description: "Multi-tenant AI Knowledge Hub - API documentation",
     },
     servers: [
       {

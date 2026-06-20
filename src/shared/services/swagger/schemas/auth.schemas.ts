@@ -39,4 +39,18 @@ export const authSchemas: Record<string, Record<string, unknown>> = {
       },
     },
   },
+  RefreshRequest: {
+    type: "object",
+    required: ["refreshToken"],
+    properties: {
+      refreshToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+    },
+  },
+  RefreshResponse: {
+    type: "object",
+    properties: {
+      accessToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+      refreshToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+    },
+  },
 };

@@ -28,13 +28,13 @@ export class RegisterUseCase {
 
     const existingUser = await this.usersRepo.findByEmail(dto.email);
     if (existingUser) {
-      this.logger.warn('Registration failed — email already exists', { email: dto.email });
+      this.logger.warn('Registration failed - email already exists', { email: dto.email });
       throw new ConflictError('Email already registered');
     }
 
     const hashedPassword = await this.hashService.hash(dto.password);
 
-    // Build domain objects — naming and slug rules live on the entities
+    // Build domain objects - naming and slug rules live on the entities
     const userEntity = UserEntity.create({
       id: this.idService.generate(),
       name: dto.name,
@@ -48,7 +48,7 @@ export class RegisterUseCase {
       ownerName: dto.name,
     });
 
-    // Membership VO is created inside the entity — use case never touches OrgMembership directly
+    // Membership VO is created inside the entity - use case never touches OrgMembership directly
     userEntity.joinOrganization({
       organizationId: orgEntity.id,
       role: OrgRole.OWNER,
@@ -72,12 +72,12 @@ export class RegisterUseCase {
     } catch (error) {
       await client.query('ROLLBACK');
       this.logger.error('Registration transaction failed', error, { email: dto.email });
-      throw new InternalError('Registration failed — please try again');
+      throw new InternalError('Registration failed - please try again');
     } finally {
       client.release();
     }
 
-    // Response is built from the already-in-memory entities — no extra DB call needed
+    // Response is built from the already-in-memory entities - no extra DB call needed
     return RegisterResponseDto.fromEntities(userEntity);
   }
 }

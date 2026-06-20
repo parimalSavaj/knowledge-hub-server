@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS org_members (
                     CONSTRAINT org_members_role_check
                     CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
   joined_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_active_at  TIMESTAMPTZ NULL,
 
   PRIMARY KEY (user_id, organization_id)
 );

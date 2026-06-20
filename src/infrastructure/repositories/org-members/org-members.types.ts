@@ -3,4 +3,5 @@ export type OrgMemberRow = {
   organization_id: string;
   role: string;
   joined_at: Date;
+  last_active_at: Date | null;
 };

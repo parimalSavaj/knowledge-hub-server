@@ -20,6 +20,17 @@ export class UsersRepository implements IUsersRepository {
     return row ? this.toEntity(row) : null;
   }
 
+  async findById(id: string, client?: PoolClient): Promise<UserEntity | null> {
+    const sql = `SELECT * FROM ${this.TABLE} WHERE id = $1 AND deleted_at IS NULL`;
+    const params = [id];
+
+    const row = client
+      ? (await client.query<UserRow>(sql, params)).rows[0] ?? null
+      : await this.db.selectOne<UserRow>(sql, params);
+
+    return row ? this.toEntity(row) : null;
+  }
+
   async create(entity: UserEntity, client?: PoolClient): Promise<void> {
     const sql = `
       INSERT INTO ${this.TABLE} (id, name, email, password, auth_provider, created_at, updated_at)

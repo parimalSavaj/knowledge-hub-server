@@ -8,7 +8,7 @@ export type AccessTokenInput = {
   orgRole: OrgRole;
 };
 
-// Full decoded shape returned by jwt.verify — includes JWT standard claims
+// Full decoded shape returned by jwt.verify - includes JWT standard claims
 export type JwtPayload = AccessTokenInput & {
   iat: number;
   exp: number;
@@ -17,6 +17,7 @@ export type JwtPayload = AccessTokenInput & {
 // What you provide when signing a refresh token
 export type RefreshTokenInput = {
   userId: string;
+  orgId: string;
 };
 
 // Full decoded shape returned by jwt.verify for refresh tokens

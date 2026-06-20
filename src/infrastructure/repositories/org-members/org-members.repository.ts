@@ -1,20 +1,46 @@
-import { PoolClient } from 'pg';
-import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
-import { OrgMembership } from '../../../domain/value-objects/org-membership.value-object';
-import { IOrgMembersRepository } from './org-members.repository.interface';
-import { OrgMemberRow } from './org-members.types';
+import { PoolClient } from "pg";
+import { IDatabaseService } from "../../../shared/services/database/database.service.interface";
+import { OrgMembership } from "../../../domain/value-objects/org-membership.value-object";
+import { IOrgMembersRepository } from "./org-members.repository.interface";
+import { OrgMemberRow } from "./org-members.types";
 
 export class OrgMembersRepository implements IOrgMembersRepository {
-  private readonly TABLE = 'org_members';
+  private readonly TABLE = "org_members";
 
   constructor(private readonly db: IDatabaseService) {}
 
   async findByUserId(userId: string, client?: PoolClient): Promise<OrgMemberRow | null> {
-    const sql = `SELECT * FROM ${this.TABLE} WHERE user_id = $1 LIMIT 1`;
+    const sql = `SELECT * FROM ${this.TABLE} WHERE user_id = $1 ORDER BY last_active_at DESC NULLS LAST LIMIT 1`;
     const params = [userId];
 
     const row = client
       ? (await client.query<OrgMemberRow>(sql, params)).rows[0] ?? null
+      : await this.db.selectOne<OrgMemberRow>(sql, params);
+
+    return row;
+  }
+
+  async updateLastActiveAt(userId: string, orgId: string, client?: PoolClient): Promise<void> {
+    const sql = `UPDATE ${this.TABLE} SET last_active_at = NOW() WHERE user_id = $1 AND organization_id = $2`;
+    const params = [userId, orgId];
+
+    if (client) {
+      await client.query(sql, params);
+    } else {
+      await this.db.update(sql, params);
+    }
+  }
+
+  async findByUserAndOrgId(
+    userId: string,
+    orgId: string,
+    client?: PoolClient,
+  ): Promise<OrgMemberRow | null> {
+    const sql = `SELECT * FROM ${this.TABLE} WHERE user_id = $1 AND organization_id = $2 LIMIT 1`;
+    const params = [userId, orgId];
+
+    const row = client
+      ? ((await client.query<OrgMemberRow>(sql, params)).rows[0] ?? null)
       : await this.db.selectOne<OrgMemberRow>(sql, params);
 
     return row;

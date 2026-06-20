@@ -6,7 +6,7 @@ import { DomainValidationError } from '../errors/domain-validation.error';
 export class UserEntity {
   /**
    * The membership this user holds in an organization.
-   * Populated by calling joinOrganization() — never set externally.
+   * Populated by calling joinOrganization() - never set externally.
    */
   private _membership: OrgMembership | null = null;
 
@@ -123,7 +123,7 @@ export class UserEntity {
 
   get membership(): OrgMembership {
     if (this._membership === null) {
-      throw new Error('No membership assigned — call joinOrganization() first');
+      throw new Error('No membership assigned - call joinOrganization() first');
     }
     return this._membership;
   }
@@ -132,7 +132,7 @@ export class UserEntity {
 
   /**
    * Assigns this user to an organization with a given role.
-   * Directly instantiates OrgMembership — no intermediate factory call.
+   * Directly instantiates OrgMembership - no intermediate factory call.
    */
   joinOrganization(props: { organizationId: string; role: OrgRole }): void {
     this._membership = OrgMembership.create({

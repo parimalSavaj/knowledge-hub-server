@@ -16,9 +16,9 @@ fileMatchPattern: "src/modules/*/application/**"
 ```
 src/modules/<name>/application/
 ├── dtos/
-│   ├── <action>.dto.ts              # One file per API — request & response DTO classes
+│   ├── <action>.dto.ts              # One file per API - request & response DTO classes
 │   └── <action>.dto.ts
-├── <action>.use-case.ts             # One file per API — single execute() method
+├── <action>.use-case.ts             # One file per API - single execute() method
 └── <action>.use-case.ts
 ```
 
@@ -225,7 +225,7 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
   } catch (error) {
     await client.query('ROLLBACK');
     this.logger.error('<Action> transaction failed', error, { /* context */ });
-    throw new InternalError('<User-friendly message> — please try again');
+    throw new InternalError('<User-friendly message> - please try again');
   } finally {
     client.release();
   }
@@ -255,11 +255,11 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
 ### Repository Method Signature for Transactions
 
 ```ts
-// Interface — tables with entities
+// Interface - tables with entities
 create(entity: <Name>Entity, client?: PoolClient): Promise<void>;
 findById(id: string, client?: PoolClient): Promise<<Name>Entity | null>;
 
-// Interface — tables without entities (plain data object)
+// Interface - tables without entities (plain data object)
 create(data: { id: string; <field>: <type>; ... }, client?: PoolClient): Promise<void>;
 ```
 
@@ -316,7 +316,7 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
     await this.<repo>.create({ ... });
   } catch (error) {
     this.logger.error('<Operation> failed', error, { /* context: userId, email, etc. */ });
-    throw new InternalError('<User-friendly message> — please try again');
+    throw new InternalError('<User-friendly message> - please try again');
   }
 
   // 3. Return response DTO

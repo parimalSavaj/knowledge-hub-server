@@ -10,6 +10,7 @@ inclusion: auto
 - Use `import/export` (ES modules syntax with CommonJS compilation).
 - All config values come from `src/shared/config/index.ts` — never read `process.env` directly elsewhere.
 - Use the `LoggerService` for all logging — no `console.log` in production code.
+- **Use normal dash (`-`) in all code** — error messages, log messages, comments, and string literals must use a normal hyphen-minus (`-`), never an em dash (`—`) or en dash (`–`). Em dashes are only acceptable in markdown documentation files (`.md`), never in `.ts` source files.
 
 ## After Every Change
 

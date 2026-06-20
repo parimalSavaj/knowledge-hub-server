@@ -71,7 +71,7 @@ export class App {
   }
 
   private initializePublicRoutes() {
-    // API docs — served before helmet so CSP doesn't block Swagger UI assets
+    // API docs - served before helmet so CSP doesn't block Swagger UI assets
     this.app.use(
       ROUTE_PREFIXES.BASE_PATH + ROUTE_PREFIXES.DOCS,
       swaggerUi.serve,

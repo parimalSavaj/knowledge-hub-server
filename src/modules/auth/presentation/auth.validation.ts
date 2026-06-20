@@ -19,3 +19,7 @@ export const loginBodySchema = z.object({
   email: z.string().email('Invalid email address').max(255),
   password: passwordSchema,
 });
+
+export const refreshBodySchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});

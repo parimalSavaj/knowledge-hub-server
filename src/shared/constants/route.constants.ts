@@ -22,5 +22,6 @@ export const ROUTES = {
   AUTH: {
     REGISTER: "/register",
     LOGIN: "/login",
+    REFRESH: "/refresh",
   },
 };
