@@ -1,16 +1,16 @@
-import { IUsersRepository } from '../../../infrastructure/repositories/users/users.repository.interface';
-import { IOrganizationsRepository } from '../../../infrastructure/repositories/organizations/organizations.repository.interface';
-import { IOrgMembersRepository } from '../../../infrastructure/repositories/org-members/org-members.repository.interface';
-import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
-import { IHashService } from '../../../shared/services/hash/hash.service.interface';
-import { IIdService } from '../../../shared/services/id/id.service.interface';
-import { ILoggerService } from '../../../shared/services/logger/logger.service.interface';
-import { ConflictError, InternalError } from '../../../shared/core/api-error';
-import { OrgRole } from '../../../domain/enums/org-role.enum';
-import { AuthProvider } from '../../../domain/enums/auth-provider.enum';
-import { UserEntity } from '../../../domain/entities/user.entity';
-import { OrganizationEntity } from '../../../domain/entities/organization.entity';
-import { RegisterRequestDto, RegisterResponseDto } from './dtos/register.dto';
+import { IUsersRepository } from "../../../infrastructure/repositories/users/users.repository.interface";
+import { IOrganizationsRepository } from "../../../infrastructure/repositories/organizations/organizations.repository.interface";
+import { IOrgMembersRepository } from "../../../infrastructure/repositories/org-members/org-members.repository.interface";
+import { IDatabaseService } from "../../../shared/services/database/database.service.interface";
+import { IHashService } from "../../../shared/services/hash/hash.service.interface";
+import { IIdService } from "../../../shared/services/id/id.service.interface";
+import { ILoggerService } from "../../../shared/services/logger/logger.service.interface";
+import { ConflictError, InternalError } from "../../../shared/core/api-error";
+import { OrgRole } from "../../../domain/enums/org-role.enum";
+import { AuthProvider } from "../../../domain/enums/auth-provider.enum";
+import { UserEntity } from "../../../domain/entities/user.entity";
+import { OrganizationEntity } from "../../../domain/entities/organization.entity";
+import { RegisterRequestDto, RegisterResponseDto } from "./dtos/register.dto";
 
 export class RegisterUseCase {
   constructor(
@@ -24,12 +24,12 @@ export class RegisterUseCase {
   ) {}
 
   async execute(dto: RegisterRequestDto): Promise<RegisterResponseDto> {
-    this.logger.info('Register attempt', { email: dto.email });
+    this.logger.info("Register attempt", { email: dto.email });
 
     const existingUser = await this.usersRepo.findByEmail(dto.email);
     if (existingUser) {
-      this.logger.warn('Registration failed - email already exists', { email: dto.email });
-      throw new ConflictError('Email already registered');
+      this.logger.warn("Registration failed - email already exists", { email: dto.email });
+      throw new ConflictError("Email already registered");
     }
 
     const hashedPassword = await this.hashService.hash(dto.password);
@@ -57,22 +57,22 @@ export class RegisterUseCase {
     // Transaction: create user + organization + org_member atomically
     const client = await this.db.getClient();
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       await this.usersRepo.create(userEntity, client);
       await this.orgsRepo.create(orgEntity, client);
       await this.orgMembersRepo.create(userEntity.membership, client);
 
-      await client.query('COMMIT');
-      this.logger.info('User registered successfully', {
+      await client.query("COMMIT");
+      this.logger.info("User registered successfully", {
         userId: userEntity.id,
         orgId: orgEntity.id,
         email: dto.email,
       });
     } catch (error) {
-      await client.query('ROLLBACK');
-      this.logger.error('Registration transaction failed', error, { email: dto.email });
-      throw new InternalError('Registration failed - please try again');
+      await client.query("ROLLBACK");
+      this.logger.error("Registration transaction failed", error, { email: dto.email });
+      throw new InternalError("Registration failed - please try again");
     } finally {
       client.release();
     }

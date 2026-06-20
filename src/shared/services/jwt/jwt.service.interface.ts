@@ -1,4 +1,4 @@
-import { AccessTokenInput, RefreshTokenInput } from './jwt.types';
+import { AccessTokenInput, RefreshTokenInput } from "./jwt.types";
 
 export interface IJwtService {
   signAccessToken(payload: AccessTokenInput): string;

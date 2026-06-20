@@ -1,5 +1,5 @@
-import { PoolClient } from 'pg';
-import { UserEntity } from '../../../domain/entities/user.entity';
+import { PoolClient } from "pg";
+import { UserEntity } from "../../../domain/entities/user.entity";
 
 export interface IUsersRepository {
   findByEmail(email: string, client?: PoolClient): Promise<UserEntity | null>;

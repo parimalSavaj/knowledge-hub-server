@@ -5,7 +5,7 @@ export class DomainValidationError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.name = 'DomainValidationError';
+    this.name = "DomainValidationError";
     this.statusCode = 400;
     this.success = false;
     this.data = null;

@@ -14,7 +14,7 @@ export class OrgMembersRepository implements IOrgMembersRepository {
     const params = [userId];
 
     const row = client
-      ? (await client.query<OrgMemberRow>(sql, params)).rows[0] ?? null
+      ? ((await client.query<OrgMemberRow>(sql, params)).rows[0] ?? null)
       : await this.db.selectOne<OrgMemberRow>(sql, params);
 
     return row;

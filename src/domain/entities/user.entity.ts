@@ -1,7 +1,7 @@
-import { AuthProvider } from '../enums/auth-provider.enum';
-import { OrgMembership } from '../value-objects/org-membership.value-object';
-import { OrgRole } from '../enums/org-role.enum';
-import { DomainValidationError } from '../errors/domain-validation.error';
+import { AuthProvider } from "../enums/auth-provider.enum";
+import { OrgMembership } from "../value-objects/org-membership.value-object";
+import { OrgRole } from "../enums/org-role.enum";
+import { DomainValidationError } from "../errors/domain-validation.error";
 
 export class UserEntity {
   /**
@@ -28,15 +28,15 @@ export class UserEntity {
   // --- Invariant Validation ---
   private validate(): void {
     if (this._authProvider === AuthProvider.LOCAL && !this._password) {
-      throw new DomainValidationError('Local auth user must have a password');
+      throw new DomainValidationError("Local auth user must have a password");
     }
 
     if (this._authProvider === AuthProvider.GOOGLE && !this._providerId) {
-      throw new DomainValidationError('Google auth user must have a provider ID');
+      throw new DomainValidationError("Google auth user must have a provider ID");
     }
 
     if (!this._password && !this._providerId) {
-      throw new DomainValidationError('User must have either a password or a provider ID');
+      throw new DomainValidationError("User must have either a password or a provider ID");
     }
   }
 
@@ -123,7 +123,7 @@ export class UserEntity {
 
   get membership(): OrgMembership {
     if (this._membership === null) {
-      throw new Error('No membership assigned - call joinOrganization() first');
+      throw new Error("No membership assigned - call joinOrganization() first");
     }
     return this._membership;
   }

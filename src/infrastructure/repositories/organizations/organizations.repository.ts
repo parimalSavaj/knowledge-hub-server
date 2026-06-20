@@ -1,10 +1,10 @@
-import { PoolClient } from 'pg';
-import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
-import { OrganizationEntity } from '../../../domain/entities/organization.entity';
-import { IOrganizationsRepository } from './organizations.repository.interface';
+import { PoolClient } from "pg";
+import { IDatabaseService } from "../../../shared/services/database/database.service.interface";
+import { OrganizationEntity } from "../../../domain/entities/organization.entity";
+import { IOrganizationsRepository } from "./organizations.repository.interface";
 
 export class OrganizationsRepository implements IOrganizationsRepository {
-  private readonly TABLE = 'organizations';
+  private readonly TABLE = "organizations";
 
   constructor(private readonly db: IDatabaseService) {}
 

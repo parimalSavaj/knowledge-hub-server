@@ -24,9 +24,9 @@ export class OrganizationEntity {
     const base = baseName
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
 
     const suffix = Math.random().toString(36).substring(2, 8);
     return `${base}-${suffix}`;

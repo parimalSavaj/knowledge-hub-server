@@ -1,4 +1,4 @@
-import { OrgRole } from '../enums/org-role.enum';
+import { OrgRole } from "../enums/org-role.enum";
 
 /**
  * Represents the membership of a user in an organization - their role within it.
@@ -20,17 +20,8 @@ export class OrgMembership {
     // No cross-field invariants yet - add domain rules here when needed
   }
 
-  static create(props: {
-    userId: string;
-    organizationId: string;
-    role: OrgRole;
-  }): OrgMembership {
-    return new OrgMembership(
-      props.userId,
-      props.organizationId,
-      props.role,
-      new Date(),
-    );
+  static create(props: { userId: string; organizationId: string; role: OrgRole }): OrgMembership {
+    return new OrgMembership(props.userId, props.organizationId, props.role, new Date());
   }
 
   // --- Getters ---

@@ -2,7 +2,7 @@ import jwt, { JsonWebTokenError, TokenExpiredError, SignOptions } from "jsonwebt
 import { config } from "../../config";
 import { UnauthorizedError } from "../../core/api-error";
 import { IJwtService } from "./jwt.service.interface";
-import {  AccessTokenInput, RefreshTokenInput } from "./jwt.types";
+import { AccessTokenInput, RefreshTokenInput } from "./jwt.types";
 
 export class JwtService implements IJwtService {
   private static instance: JwtService | null = null;

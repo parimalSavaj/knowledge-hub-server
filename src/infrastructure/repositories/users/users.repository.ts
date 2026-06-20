@@ -1,11 +1,11 @@
-import { PoolClient } from 'pg';
-import { IDatabaseService } from '../../../shared/services/database/database.service.interface';
-import { UserEntity } from '../../../domain/entities/user.entity';
-import { IUsersRepository } from './users.repository.interface';
-import { UserRow } from './users.types';
+import { PoolClient } from "pg";
+import { IDatabaseService } from "../../../shared/services/database/database.service.interface";
+import { UserEntity } from "../../../domain/entities/user.entity";
+import { IUsersRepository } from "./users.repository.interface";
+import { UserRow } from "./users.types";
 
 export class UsersRepository implements IUsersRepository {
-  private readonly TABLE = 'users';
+  private readonly TABLE = "users";
 
   constructor(private readonly db: IDatabaseService) {}
 
@@ -14,7 +14,7 @@ export class UsersRepository implements IUsersRepository {
     const params = [email];
 
     const row = client
-      ? (await client.query<UserRow>(sql, params)).rows[0] ?? null
+      ? ((await client.query<UserRow>(sql, params)).rows[0] ?? null)
       : await this.db.selectOne<UserRow>(sql, params);
 
     return row ? this.toEntity(row) : null;
@@ -25,7 +25,7 @@ export class UsersRepository implements IUsersRepository {
     const params = [id];
 
     const row = client
-      ? (await client.query<UserRow>(sql, params)).rows[0] ?? null
+      ? ((await client.query<UserRow>(sql, params)).rows[0] ?? null)
       : await this.db.selectOne<UserRow>(sql, params);
 
     return row ? this.toEntity(row) : null;

@@ -55,7 +55,10 @@ export class LoginUseCase {
     try {
       await this.orgMembersRepo.updateLastActiveAt(user.id, membership.organization_id);
     } catch (error) {
-      this.logger.error('Failed to update last active organization timestamp', error, { userId: user.id, orgId: membership.organization_id });
+      this.logger.error("Failed to update last active organization timestamp", error, {
+        userId: user.id,
+        orgId: membership.organization_id,
+      });
     }
 
     // 4. Sign tokens
