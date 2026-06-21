@@ -8,4 +8,5 @@ export interface IRefreshTokensRepository {
     client?: PoolClient,
   ): Promise<void>;
   revoke(id: string, client?: PoolClient): Promise<void>;
+  hasActiveSession(userId: string, client?: PoolClient): Promise<boolean>;
 }

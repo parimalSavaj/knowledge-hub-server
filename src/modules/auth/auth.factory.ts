@@ -10,6 +10,7 @@ import { RefreshTokensRepository } from "../../infrastructure/repositories/refre
 import { RegisterUseCase } from "./application/register.use-case";
 import { LoginUseCase } from "./application/login.use-case";
 import { RefreshUseCase } from "./application/refresh.use-case";
+import { MeUseCase } from "./application/me.use-case";
 import { AuthController } from "./presentation/auth.controller";
 
 export class AuthFactory {
@@ -55,6 +56,8 @@ export class AuthFactory {
       logger,
     );
 
-    return new AuthController(registerUseCase, loginUseCase, refreshUseCase);
+    const meUseCase = new MeUseCase(usersRepo, orgMembersRepo, refreshTokensRepo, logger);
+
+    return new AuthController(registerUseCase, loginUseCase, refreshUseCase, meUseCase);
   }
 }

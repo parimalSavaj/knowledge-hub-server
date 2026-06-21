@@ -7,12 +7,15 @@ import { LoginUseCase } from "../application/login.use-case";
 import { LoginRequestDto } from "../application/dtos/login.dto";
 import { RefreshUseCase } from "../application/refresh.use-case";
 import { RefreshRequestDto } from "../application/dtos/refresh.dto";
+import { MeUseCase } from "../application/me.use-case";
+import { MeRequestDto } from "../application/dtos/me.dto";
 
 export class AuthController {
   constructor(
     private readonly registerUseCase: RegisterUseCase,
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshUseCase: RefreshUseCase,
+    private readonly meUseCase: MeUseCase,
   ) {}
 
   register = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -47,6 +50,19 @@ export class AuthController {
       res
         .status(HTTP_STATUS.OK)
         .json(new ApiResponse(HTTP_STATUS.OK, result, "Token refreshed successfully"));
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  me = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const dto = MeRequestDto.fromRequest(req);
+      const result = await this.meUseCase.execute(dto);
+
+      res
+        .status(HTTP_STATUS.OK)
+        .json(new ApiResponse(HTTP_STATUS.OK, result, "Auth verification check successful"));
     } catch (error) {
       next(error);
     }

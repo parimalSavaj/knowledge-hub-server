@@ -5,6 +5,7 @@ import { IHashService } from "../../../shared/services/hash/hash.service.interfa
 import { IIdService } from "../../../shared/services/id/id.service.interface";
 import { IJwtService } from "../../../shared/services/jwt/jwt.service.interface";
 import { ValidationMiddleware } from "../../../shared/middlewares/validate.middleware";
+import { AuthMiddleware } from "../../../shared/middlewares/auth.middleware";
 import { AuthFactory } from "../auth.factory";
 import { registerBodySchema, loginBodySchema, refreshBodySchema } from "./auth.validation";
 import { ROUTES } from "../../../shared/constants/route.constants";
@@ -12,6 +13,7 @@ import { ROUTES } from "../../../shared/constants/route.constants";
 export class AuthRoutes {
   private readonly router: Router;
   private readonly controller;
+  private readonly jwtService: IJwtService;
 
   constructor(
     db: IDatabaseService,
@@ -21,6 +23,7 @@ export class AuthRoutes {
     jwtService: IJwtService,
   ) {
     this.router = Router();
+    this.jwtService = jwtService;
     this.controller = AuthFactory.create(db, logger, hashService, idService, jwtService);
     this.setupRoutes();
   }
@@ -40,6 +43,11 @@ export class AuthRoutes {
       ROUTES.AUTH.REFRESH,
       ValidationMiddleware.validateBody(refreshBodySchema),
       this.controller.refresh,
+    );
+    this.router.get(
+      ROUTES.AUTH.ME,
+      AuthMiddleware.authenticate(this.jwtService),
+      this.controller.me,
     );
   }
 

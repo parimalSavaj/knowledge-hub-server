@@ -23,5 +23,6 @@ export const ROUTES = {
     REGISTER: "/register",
     LOGIN: "/login",
     REFRESH: "/refresh",
+    ME: "/me",
   },
 };

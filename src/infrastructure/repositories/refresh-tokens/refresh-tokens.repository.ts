@@ -43,4 +43,15 @@ export class RefreshTokensRepository implements IRefreshTokensRepository {
       await this.db.update(sql, params);
     }
   }
+
+  async hasActiveSession(userId: string, client?: PoolClient): Promise<boolean> {
+    const sql = `SELECT EXISTS(SELECT 1 FROM ${this.TABLE} WHERE user_id = $1 AND NOT revoked AND expires_at > NOW())`;
+    const params = [userId];
+
+    const result = client
+      ? ((await client.query<{ exists: boolean }>(sql, params)).rows[0] ?? null)
+      : await this.db.selectOne<{ exists: boolean }>(sql, params);
+
+    return result?.exists ?? false;
+  }
 }
