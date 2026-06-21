@@ -93,7 +93,7 @@ export class LoginUseCase {
     this.logger.info("Login successful", { userId: user.id, email: user.email });
 
     // 6. Return response
-    return LoginResponseDto.fromEntities({
+    return LoginResponseDto.toResponse({
       accessToken,
       refreshToken,
       user,

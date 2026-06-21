@@ -114,7 +114,7 @@ export class RefreshUseCase {
     }
 
     // 9. Return new tokens
-    return RefreshResponseDto.fromEntities({
+    return RefreshResponseDto.toResponse({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
     });

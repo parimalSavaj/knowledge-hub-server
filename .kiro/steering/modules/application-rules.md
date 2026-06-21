@@ -58,7 +58,7 @@ export class <Action>ResponseDto {
     this.<field2> = props.<field2>;
   }
 
-  static fromEntities(entity: { <sourceField1>: <type>; <sourceField2>: <type> }): <Action>ResponseDto {
+  static toResponse(entity: { <sourceField1>: <type>; <sourceField2>: <type> }): <Action>ResponseDto {
     return new <Action>ResponseDto({
       <field1>: entity.<sourceField1>,
       <field2>: entity.<sourceField2>,
@@ -70,13 +70,13 @@ export class <Action>ResponseDto {
 DTO Rules:
 - DTOs are **classes with a constructor** — not interfaces, not plain types.
 - **Request DTOs** have a `private constructor` and a `static fromRequest(req: Request)` factory — the DTO owns the extraction logic from the request object. The controller never manually picks fields from `req.body` or `req.user`.
-- **Response DTOs** have a `private constructor` and a `static fromEntities(...)` factory — the DTO owns the mapping logic from domain entities. The use case never manually picks fields from entities to build the response.
+- **Response DTOs** have a `private constructor` and a `static toResponse(...)` factory — the DTO owns the mapping logic from domain entities. The use case never manually picks fields from entities to build the response.
 - `fromRequest` extracts from `req.body`, `req.params`, `req.query`, and `req.user` as needed.
-- `fromEntities` accepts one or more entity/value-object shapes and maps them to the response fields. The use case calls `<Action>ResponseDto.fromEntities(entity)` — it never calls `new <Action>ResponseDto(...)` directly.
+- `toResponse` accepts one or more entity/value-object shapes and maps them to the response fields. The use case calls `<Action>ResponseDto.toResponse(entity)` — it never calls `new <Action>ResponseDto(...)` directly.
 - One file per API — file naming: `<action>.dto.ts` or `<action>-<entity>.dto.ts`.
 - Request DTO = what the use case accepts. Response DTO = what the use case returns.
 - No validation logic in DTOs — validation lives in `presentation/validation`.
-- No methods beyond the constructor, `fromRequest`, and `fromEntities` — DTOs are pure data carriers.
+- No methods beyond the constructor, `fromRequest`, and `toResponse` — DTOs are pure data carriers.
 - DTOs may import from `domain/enums/` if a property uses an enum type.
 - DTOs never import from `infrastructure/`, `presentation/`, or `shared/` (except `Request` type from express for `fromRequest`).
 
@@ -230,7 +230,7 @@ async execute(dto: <Action>RequestDto): Promise<<Action>ResponseDto> {
     client.release();
   }
 
-  return <Action>ResponseDto.fromEntities(entityA);
+  return <Action>ResponseDto.toResponse(entityA);
 }
 ```
 

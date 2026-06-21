@@ -23,7 +23,7 @@ export class RefreshResponseDto {
     this.refreshToken = props.refreshToken;
   }
 
-  static fromEntities(data: { accessToken: string; refreshToken: string }): RefreshResponseDto {
+  static toResponse(data: { accessToken: string; refreshToken: string }): RefreshResponseDto {
     return new RefreshResponseDto({
       accessToken: data.accessToken,
       refreshToken: data.refreshToken,

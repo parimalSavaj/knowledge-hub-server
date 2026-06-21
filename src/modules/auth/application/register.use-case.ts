@@ -78,6 +78,6 @@ export class RegisterUseCase {
     }
 
     // Response is built from the already-in-memory entities - no extra DB call needed
-    return RegisterResponseDto.fromEntities(userEntity);
+    return RegisterResponseDto.toResponse(userEntity);
   }
 }

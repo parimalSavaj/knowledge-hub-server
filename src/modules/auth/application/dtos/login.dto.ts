@@ -32,7 +32,7 @@ export class LoginResponseDto {
     this.user = props.user;
   }
 
-  static fromEntities(data: {
+  static toResponse(data: {
     accessToken: string;
     refreshToken: string;
     user: { id: string; name: string; email: string };

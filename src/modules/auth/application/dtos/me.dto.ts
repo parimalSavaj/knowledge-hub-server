@@ -25,11 +25,11 @@ export class MeRequestDto {
 export class MeResponseDto {
   readonly active: boolean;
 
-  private constructor(active: boolean) {
-    this.active = active;
+  private constructor(props: { active: boolean }) {
+    this.active = props.active;
   }
 
-  static success(): MeResponseDto {
-    return new MeResponseDto(true);
+  static toResponse(): MeResponseDto {
+    return new MeResponseDto({ active: true });
   }
 }

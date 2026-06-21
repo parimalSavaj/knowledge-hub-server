@@ -31,7 +31,7 @@ export class RegisterResponseDto {
     this.email = props.email;
   }
 
-  static fromEntities(user: { id: string; name: string; email: string }): RegisterResponseDto {
+  static toResponse(user: { id: string; name: string; email: string }): RegisterResponseDto {
     return new RegisterResponseDto({
       userId: user.id,
       name: user.name,
