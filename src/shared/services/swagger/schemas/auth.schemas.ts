@@ -57,4 +57,11 @@ export const authSchemas: Record<string, Record<string, unknown>> = {
       refreshToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
     },
   },
+  MeResponse: {
+    type: "object",
+    properties: {
+      active: { type: "boolean", example: true },
+    },
+  },
 };
+

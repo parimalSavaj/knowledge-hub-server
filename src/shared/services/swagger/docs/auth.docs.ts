@@ -155,4 +155,44 @@ export const authDocs: Record<string, Record<string, unknown>> = {
       },
     },
   },
+  "/auth/me": {
+    get: {
+      tags: ["Auth"],
+      summary: "Verify authentication status",
+      description: "Checks if the current session and token are active and valid.",
+      security: [
+        {
+          bearerAuth: [],
+        },
+      ],
+      responses: {
+        200: {
+          description: "Auth verification check successful",
+          content: {
+            "application/json": {
+              schema: {
+                allOf: [
+                  { $ref: "#/components/schemas/ApiResponse" },
+                  {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/MeResponse" },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        401: {
+          description: "Unauthorized - Access token is missing, invalid, or expired, or session revoked",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApiError" },
+            },
+          },
+        },
+      },
+    },
+  },
 };
