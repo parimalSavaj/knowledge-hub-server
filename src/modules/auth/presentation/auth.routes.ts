@@ -49,6 +49,10 @@ export class AuthRoutes {
       AuthMiddleware.authenticate(this.jwtService),
       this.controller.me,
     );
+    this.router.post(
+      ROUTES.AUTH.LOGOUT,
+      this.controller.logout,
+    );
   }
 
   getRouter(): Router {

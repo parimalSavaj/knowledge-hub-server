@@ -11,6 +11,7 @@ import { RegisterUseCase } from "./application/register.use-case";
 import { LoginUseCase } from "./application/login.use-case";
 import { RefreshUseCase } from "./application/refresh.use-case";
 import { MeUseCase } from "./application/me.use-case";
+import { LogoutUseCase } from "./application/logout.use-case";
 import { AuthController } from "./presentation/auth.controller";
 
 export class AuthFactory {
@@ -57,7 +58,8 @@ export class AuthFactory {
     );
 
     const meUseCase = new MeUseCase(usersRepo, orgMembersRepo, refreshTokensRepo, logger);
+    const logoutUseCase = new LogoutUseCase(refreshTokensRepo, jwtService, logger);
 
-    return new AuthController(registerUseCase, loginUseCase, refreshUseCase, meUseCase);
+    return new AuthController(registerUseCase, loginUseCase, refreshUseCase, meUseCase, logoutUseCase);
   }
 }

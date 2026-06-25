@@ -45,9 +45,12 @@ export const authSchemas: Record<string, Record<string, unknown>> = {
   },
   RefreshRequest: {
     type: "object",
-    required: ["refreshToken"],
     properties: {
-      refreshToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+      refreshToken: {
+        type: "string",
+        description: "Fallback if not sent as HttpOnly cookie.",
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      },
     },
   },
   RefreshResponse: {
@@ -55,6 +58,16 @@ export const authSchemas: Record<string, Record<string, unknown>> = {
     properties: {
       accessToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
       refreshToken: { type: "string", example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
+    },
+  },
+  LogoutRequest: {
+    type: "object",
+    properties: {
+      refreshToken: {
+        type: "string",
+        description: "Fallback if not sent as HttpOnly cookie.",
+        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      },
     },
   },
   MeResponse: {

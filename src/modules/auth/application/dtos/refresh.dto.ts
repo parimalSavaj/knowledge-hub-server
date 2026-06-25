@@ -9,7 +9,7 @@ export class RefreshRequestDto {
 
   static fromRequest(req: Request): RefreshRequestDto {
     return new RefreshRequestDto({
-      refreshToken: req.body.refreshToken,
+      refreshToken: req.cookies?.refreshToken || req.body?.refreshToken,
     });
   }
 }

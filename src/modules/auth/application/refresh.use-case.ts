@@ -9,6 +9,7 @@ import { RefreshTokenPayload } from "../../../shared/services/jwt/jwt.types";
 import { OrgRole } from "../../../domain/enums/org-role.enum";
 import { UnauthorizedError, InternalError } from "../../../shared/core/api-error";
 import { RefreshRequestDto, RefreshResponseDto } from "./dtos/refresh.dto";
+import { config } from "../../../shared/config";
 
 export class RefreshUseCase {
   constructor(
@@ -23,6 +24,10 @@ export class RefreshUseCase {
 
   async execute(dto: RefreshRequestDto): Promise<RefreshResponseDto> {
     this.logger.info("Token refresh attempt");
+
+    if (!dto.refreshToken) {
+      throw new UnauthorizedError("Refresh token is required");
+    }
 
     // 1. Verify the refresh token JWT signature
     const payload = this.jwtService.verifyRefreshToken<RefreshTokenPayload>(dto.refreshToken);
@@ -84,7 +89,7 @@ export class RefreshUseCase {
 
     // 8. Transaction: revoke old token + store new token atomically
     const newTokenId = this.idService.generate();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + config.jwt.refreshExpiresInMs);
 
     const client = await this.db.getClient();
     try {

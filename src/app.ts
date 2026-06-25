@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import swaggerUi from "swagger-ui-express";
 import { HealthRoutes } from "./modules/system/health.routes";
 import { AuthRoutes } from "./modules/auth/presentation/auth.routes";
@@ -90,6 +91,9 @@ export class App {
 
     // CORS
     this.app.use(cors());
+
+    // Cookie parsing
+    this.app.use(cookieParser());
 
     // Body parsing
     this.app.use(express.json());
