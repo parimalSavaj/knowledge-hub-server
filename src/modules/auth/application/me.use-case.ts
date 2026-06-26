@@ -57,6 +57,6 @@ export class MeUseCase {
       throw new UnauthorizedError("Session has been revoked or expired");
     }
 
-    return MeResponseDto.toResponse();
+    return MeResponseDto.toResponse(dto.userId);
   }
 }

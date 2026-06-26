@@ -24,12 +24,14 @@ export class MeRequestDto {
 
 export class MeResponseDto {
   readonly active: boolean;
+  readonly userId: string;
 
-  private constructor(props: { active: boolean }) {
+  private constructor(props: { active: boolean; userId: string }) {
     this.active = props.active;
+    this.userId = props.userId;
   }
 
-  static toResponse(): MeResponseDto {
-    return new MeResponseDto({ active: true });
+  static toResponse(userId: string): MeResponseDto {
+    return new MeResponseDto({ active: true, userId });
   }
 }
