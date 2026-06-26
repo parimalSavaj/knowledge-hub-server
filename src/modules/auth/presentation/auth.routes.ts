@@ -7,7 +7,7 @@ import { IJwtService } from "../../../shared/services/jwt/jwt.service.interface"
 import { ValidationMiddleware } from "../../../shared/middlewares/validate.middleware";
 import { AuthMiddleware } from "../../../shared/middlewares/auth.middleware";
 import { AuthFactory } from "../auth.factory";
-import { registerBodySchema, loginBodySchema, refreshBodySchema } from "./auth.validation";
+import { registerBodySchema, loginBodySchema } from "./auth.validation";
 import { ROUTES } from "../../../shared/constants/route.constants";
 
 export class AuthRoutes {
@@ -41,13 +41,18 @@ export class AuthRoutes {
     );
     this.router.post(
       ROUTES.AUTH.REFRESH,
-      ValidationMiddleware.validateBody(refreshBodySchema),
+      AuthMiddleware.extractRefreshToken,
       this.controller.refresh,
     );
     this.router.get(
       ROUTES.AUTH.ME,
       AuthMiddleware.authenticate(this.jwtService),
       this.controller.me,
+    );
+    this.router.post(
+      ROUTES.AUTH.LOGOUT,
+      AuthMiddleware.extractRefreshToken,
+      this.controller.logout,
     );
   }
 

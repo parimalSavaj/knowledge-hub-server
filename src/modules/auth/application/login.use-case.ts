@@ -8,6 +8,7 @@ import { ILoggerService } from "../../../shared/services/logger/logger.service.i
 import { OrgRole } from "../../../domain/enums/org-role.enum";
 import { UnauthorizedError, InternalError } from "../../../shared/core/api-error";
 import { LoginRequestDto, LoginResponseDto } from "./dtos/login.dto";
+import { config } from "../../../shared/config";
 
 export class LoginUseCase {
   constructor(
@@ -76,7 +77,7 @@ export class LoginUseCase {
 
     // 5. Store refresh token in DB
     const refreshTokenId = this.idService.generate();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const expiresAt = new Date(Date.now() + config.jwt.refreshExpiresInMs);
 
     try {
       await this.refreshTokensRepo.create({

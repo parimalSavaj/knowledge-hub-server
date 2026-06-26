@@ -56,7 +56,7 @@ export const authDocs: Record<string, Record<string, unknown>> = {
       tags: ["Auth"],
       summary: "Login with email and password",
       description:
-        "Authenticates a user with email and password. Returns an access token, refresh token, and user details on success.",
+        "Authenticates a user with email and password. Returns an access token and refresh token in the JSON response body, and also sets a secure HttpOnly refresh token cookie on the client.",
       requestBody: {
         required: true,
         content: {
@@ -108,9 +108,9 @@ export const authDocs: Record<string, Record<string, unknown>> = {
       tags: ["Auth"],
       summary: "Refresh access token",
       description:
-        "Exchanges a valid refresh token for a new access token and a rotated refresh token. The old refresh token is revoked.",
+        "Exchanges a valid refresh token (read from HttpOnly cookies or fallback request body) for a new access token and a rotated refresh token (both set in cookies and returned in the JSON body).",
       requestBody: {
-        required: true,
+        required: false,
         content: {
           "application/json": {
             schema: { $ref: "#/components/schemas/RefreshRequest" },
@@ -186,6 +186,49 @@ export const authDocs: Record<string, Record<string, unknown>> = {
         },
         401: {
           description: "Unauthorized - Access token is missing, invalid, or expired, or session revoked",
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ApiError" },
+            },
+          },
+        },
+      },
+    },
+  },
+  "/auth/logout": {
+    post: {
+      tags: ["Auth"],
+      summary: "Logout user",
+      description: "Revokes the active refresh token session in the database and clears the browser's HttpOnly refresh token cookie.",
+      requestBody: {
+        required: false,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/LogoutRequest" },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Logout successful",
+          content: {
+            "application/json": {
+              schema: {
+                allOf: [
+                  { $ref: "#/components/schemas/ApiResponse" },
+                  {
+                    type: "object",
+                    properties: {
+                      data: { type: "object", nullable: true, example: null },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+        401: {
+          description: "Invalid or expired refresh token",
           content: {
             "application/json": {
               schema: { $ref: "#/components/schemas/ApiError" },

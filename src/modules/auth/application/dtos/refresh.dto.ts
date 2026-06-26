@@ -1,7 +1,7 @@
 import { Request } from "express";
 
 export class RefreshRequestDto {
-  refreshToken: string;
+  readonly refreshToken: string;
 
   private constructor(props: { refreshToken: string }) {
     this.refreshToken = props.refreshToken;
@@ -9,7 +9,7 @@ export class RefreshRequestDto {
 
   static fromRequest(req: Request): RefreshRequestDto {
     return new RefreshRequestDto({
-      refreshToken: req.body.refreshToken,
+      refreshToken: req.refreshToken!,
     });
   }
 }

@@ -23,4 +23,15 @@ export class AuthMiddleware {
       }
     };
   }
+
+  static extractRefreshToken(req: Request, _res: Response, next: NextFunction): void {
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+
+    if (!token) {
+      return next(new UnauthorizedError("Refresh token is required"));
+    }
+
+    req.refreshToken = token;
+    next();
+  }
 }

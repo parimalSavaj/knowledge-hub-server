@@ -24,5 +24,6 @@ export const ROUTES = {
     LOGIN: "/login",
     REFRESH: "/refresh",
     ME: "/me",
+    LOGOUT: "/logout",
   },
 };
